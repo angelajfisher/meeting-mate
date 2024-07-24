@@ -1,0 +1,11 @@
+services:
+  bot:
+    build:
+      dockerfile: Dockerfile.dev
+    env_file:
+      - .env
+    ports:
+      - "80/udp"
+    volumes:
+      - .:/app
+    command: bash -c "go mod tidy && air /cmd/main.go -b 0.0.0.0"
