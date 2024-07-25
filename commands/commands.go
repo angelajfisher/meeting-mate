@@ -24,6 +24,9 @@ var List = []*discordgo.ApplicationCommand{
 				Type:        discordgo.ApplicationCommandOptionBoolean,
 			},
 		},
+	},{
+		Name:        "info",
+		Description: "Get the bot to display some info via embed",
 	},
 }
 

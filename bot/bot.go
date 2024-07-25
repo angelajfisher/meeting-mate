@@ -15,7 +15,10 @@ var (
 )
 
 func Run() {
-	session, _ := discordgo.New("Bot " + BotToken)
+	session, err := discordgo.New("Bot " + BotToken)
+	if err != nil {
+		log.Fatalf("Invalid bot parameters: %v", err)
+	}
 
 	session.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if i.Type != discordgo.InteractionApplicationCommand {
@@ -23,18 +26,18 @@ func Run() {
 		}
 
 		data := i.ApplicationCommandData()
-		if data.Name != "echo" {
-			return
+		if data.Name == "echo" {
+			commands.HandleEcho(s, i, commands.ParseOptions(data.Options))
+		} else if data.Name == "info" {
+			commands.HandleInfo(s, i, commands.ParseOptions(data.Options))
 		}
-
-		commands.HandleEcho(s, i, commands.ParseOptions(data.Options))
 	})
 
 	session.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		log.Printf("Logged in as %s", r.User.String())
 	})
 
-	_, err := session.ApplicationCommandBulkOverwrite(AppID, "", commands.List)
+	_, err = session.ApplicationCommandBulkOverwrite(AppID, "", commands.List)
 	if err != nil {
 		log.Fatalf("could not register commands: %s", err)
 	}
