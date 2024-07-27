@@ -5,7 +5,8 @@ services:
     env_file:
       - .env
     ports:
-      - "80/udp"
+      - "80:80/udp"
+      - "12345:12345"
     volumes:
       - .:/app
     command: bash -c "go mod tidy && air /cmd/main.go -b 0.0.0.0"
