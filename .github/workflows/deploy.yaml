@@ -1,0 +1,56 @@
+name: Backend CD
+
+on:
+  push:
+    branches: ['main']
+    paths:
+      - 'bot/**'
+      - 'cmd/**'
+      - 'commands/**'
+      - 'webhooks/**'
+      - 'go.mod'
+      - 'go.sum'
+
+# Cancel the workflow in progress if newer build is about to start.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  compile-binary:
+    runs-on: ubuntu-latest
+    outputs:
+      artifact-id: ${{ steps.artifact-upload.outputs.artifact-id }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: false
+      - name: Install dependencies
+        run: go mod tidy
+      - name: Create directory for build output
+        run: mkdir tmp
+      - name: Build app
+        run: GOOS=linux GOARCH=amd64 go build -v -o ./tmp ./cmd/zoom-bot
+      - name: Upload build as artifact
+        uses: actions/upload-artifact@v4
+        id: artifact-upload
+        with:
+          name: app-artifact
+          path: 'tmp'
+          if-no-files-found: error
+          retention-days: 1
+
+  notify-prod-server:
+    needs: compile-binary
+    runs-on: ubuntu-latest
+    steps:
+      - name: Invoke webhook
+        uses: johannes-huther/webhook.sh@v1
+        env:
+          webhook_url: ${{ secrets.WEBHOOK_URL }}
+          webhook_secret: ${{ secrets.WEBHOOK_SECRET }}
+          data: '{"artifact-id": "${{ needs.compile-binary.outputs.artifact-id }}"}'
