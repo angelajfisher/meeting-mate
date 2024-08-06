@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/angelajfisher/zoom-bot/bot"
-	"github.com/angelajfisher/zoom-bot/webhooks"
+	"github.com/angelajfisher/zoom-bot/server"
 	"github.com/joho/godotenv"
 )
 
@@ -29,12 +29,12 @@ func main() {
 		}
 	}
 
-	webhooks.Port = *webhookPort
-	webhooks.Secret = os.Getenv("ZOOM_TOKEN")
+	server.Port = *webhookPort
+	server.Secret = os.Getenv("ZOOM_TOKEN")
 	bot.BotToken = os.Getenv("BOT_TOKEN")
 	bot.AppID = os.Getenv("APP_ID")
 
-	if bot.BotToken == "" || bot.AppID == "" || webhooks.Secret == "" {
+	if bot.BotToken == "" || bot.AppID == "" || server.Secret == "" {
 		log.Fatal("ERROR: Please ensure your ZOOM_TOKEN, BOT_TOKEN, and APP_ID variables are in the environment before building.")
 	}
 
@@ -42,7 +42,7 @@ func main() {
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
-		webhooks.Listen(*devMode)
+		server.Start(*devMode)
 		wg.Done()
 	}()
 	wg.Add(1)
