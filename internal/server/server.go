@@ -14,10 +14,10 @@ var BaseURL string
 func Start(devMode bool) {
 
 	router := http.NewServeMux()
-	fs := http.FileServer(http.Dir("./static"))
+	// fs := http.FileServer(http.Dir("./static"))
 
+	// router.Handle("GET "+BaseURL+"/static/", http.StripPrefix(BaseURL+"/static/", fs))
 	router.HandleFunc("POST "+BaseURL+"/webhooks", handleWebhooks)
-	router.Handle("GET "+BaseURL+"/static/", http.StripPrefix(BaseURL+"/static/", fs))
 	router.HandleFunc("GET /", handleStaticSite)
 
 	log.Println("Zoom webhook listener starting on", Port)
@@ -40,6 +40,7 @@ func handleStaticSite(w http.ResponseWriter, r *http.Request) {
 
 	if len(r.URL.Path) < len(BaseURL) {
 		http.NotFound(w, r)
+		log.Printf("Could not serve path %v\n", r.URL.Path)
 		return
 	}
 
@@ -48,16 +49,20 @@ func handleStaticSite(w http.ResponseWriter, r *http.Request) {
 		fullPath = "static/index.html"
 	}
 
+	log.Printf("Looking for file with path %v\n", fullPath)
+
 	// 404 for nonexistent files
 	info, err := os.Stat(fullPath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			http.NotFound(w, r)
+			log.Printf("Could not find file at %v: %s\n", fullPath, err)
 			return
 		}
 	}
 	if info.IsDir() {
 		http.NotFound(w, r)
+		log.Printf("Could not find file at %v: %s\n", fullPath, err)
 		return
 	}
 
