@@ -6,8 +6,8 @@ import (
 	"os"
 	"sync"
 
-	"github.com/angelajfisher/zoom-bot/bot"
-	"github.com/angelajfisher/zoom-bot/server"
+	"github.com/angelajfisher/zoom-bot/internal/bot"
+	"github.com/angelajfisher/zoom-bot/internal/server"
 	"github.com/joho/godotenv"
 )
 

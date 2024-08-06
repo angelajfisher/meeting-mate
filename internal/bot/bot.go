@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/angelajfisher/zoom-bot/commands"
+	"github.com/angelajfisher/zoom-bot/internal/interactions"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -27,9 +27,9 @@ func Run() {
 
 		data := i.ApplicationCommandData()
 		if data.Name == "echo" {
-			commands.HandleEcho(s, i, commands.ParseOptions(data.Options))
+			interactions.HandleEcho(s, i, interactions.ParseOptions(data.Options))
 		} else if data.Name == "info" {
-			commands.HandleInfo(s, i, commands.ParseOptions(data.Options))
+			interactions.HandleInfo(s, i, interactions.ParseOptions(data.Options))
 		}
 	})
 
@@ -37,7 +37,7 @@ func Run() {
 		log.Printf("Logged in as %s", r.User.String())
 	})
 
-	_, err = session.ApplicationCommandBulkOverwrite(AppID, "", commands.List)
+	_, err = session.ApplicationCommandBulkOverwrite(AppID, "", interactions.List)
 	if err != nil {
 		log.Fatalf("could not register commands: %s", err)
 	}
