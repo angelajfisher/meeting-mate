@@ -29,6 +29,7 @@ func main() {
 		}
 	}
 
+	server.BaseURL = "/projects/zoom-bot"
 	server.Port = *webhookPort
 	server.Secret = os.Getenv("ZOOM_TOKEN")
 	bot.BotToken = os.Getenv("BOT_TOKEN")

@@ -5,17 +5,21 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 var Port string
+var BaseURL string
 
 func Start(devMode bool) {
 
 	router := http.NewServeMux()
+	fs := http.FileServer(http.Dir("./static"))
 
-	router.HandleFunc("POST /projects/zoom-bot/webhooks", handleWebhooks)
-	router.HandleFunc("GET /projects/zoom-bot", handleIndex)
-	router.HandleFunc("GET /projects/zoom-bot/static/", serveStaticFiles)
+	router.HandleFunc("POST "+BaseURL+"/webhooks", handleWebhooks)
+	router.Handle("GET "+BaseURL+"/static/", http.StripPrefix(BaseURL+"/static/", fs))
+	router.HandleFunc("GET /", handleStaticSite)
+
 	log.Println("Zoom webhook listener starting on", Port)
 
 	var err error
@@ -30,16 +34,37 @@ func Start(devMode bool) {
 
 }
 
-func handleIndex(w http.ResponseWriter, r *http.Request) {
+func handleStaticSite(w http.ResponseWriter, r *http.Request) {
 
-	log.Println("Site accessed")
+	startTime := time.Now()
 
-}
+	if len(r.URL.Path) < len(BaseURL) {
+		http.NotFound(w, r)
+		return
+	}
 
-func serveStaticFiles(w http.ResponseWriter, r *http.Request) {
+	fullPath := filepath.Join(".", "static", filepath.Clean(r.URL.Path[len(BaseURL):])+".html")
+	if fullPath == "static/.html" {
+		fullPath = "static/index.html"
+	}
 
-	filePath := r.URL.Path[len("projects/zoom-bot/static/"):]
-	fullPath := filepath.Join(".", "static", filepath.Clean(filePath))
+	// 404 for nonexistent files
+	info, err := os.Stat(fullPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			http.NotFound(w, r)
+			return
+		}
+	}
+	if info.IsDir() {
+		http.NotFound(w, r)
+		return
+	}
+
 	http.ServeFile(w, r, fullPath)
+
+	elapsedTime := time.Since(startTime)
+	formattedTime := time.Now().Format("2006-01-02 15:04:05")
+	log.Printf("[%s] %s '%s' in %s\n", formattedTime, r.Method, r.URL.Path, elapsedTime)
 
 }
