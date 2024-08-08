@@ -15,6 +15,7 @@ func main() {
 
 	devMode := flag.Bool("dev", false, "run the program in development mode")
 	envPath := flag.String("envFile", "", "program will load environment variables from the file at this path")
+	staticDir := flag.String("staticDir", "./static", "path to static directory containing site files")
 	webhookPort := flag.String("webhookPort", ":12345", "port at which the webhook server will listen for incoming hooks - default :12345")
 	flag.Parse()
 
@@ -30,6 +31,7 @@ func main() {
 	}
 
 	server.BaseURL = "/projects/zoom-bot"
+	server.StaticDir = *staticDir
 	server.Port = *webhookPort
 	server.Secret = os.Getenv("ZOOM_TOKEN")
 	bot.BotToken = os.Getenv("BOT_TOKEN")
