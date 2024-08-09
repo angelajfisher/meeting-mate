@@ -12,22 +12,22 @@ import (
 
 var Secret string
 
-type Payload struct {
-	PlainToken string `json:"plainToken"`
+const (
+	EndpointValidation = "endpoint.url_validation"
+)
+
+type ZoomData struct {
+	Payload interface{} `json:"payload"`
+	EventTS int64       `json:"event_ts"`
+	Event   string      `json:"event"`
 }
 
-type Verification struct {
+type URLValidation struct {
 	PlainToken     string `json:"plainToken"`
-	EncryptedToken string `json:"encryptedToken"`
-}
-type ZoomData struct {
-	Payload Payload `json:"payload,omitempty"`
-	EventTS int64   `json:"event_ts,omitempty"`
-	Event   string  `json:"event,omitempty"`
+	EncryptedToken string `json:"encryptedToken,omitempty"`
 }
 
 func handleWebhooks(w http.ResponseWriter, r *http.Request) {
-	// TODO: Check incoming event type and respond accordingly
 
 	log.Println("Webhook received!")
 
@@ -38,30 +38,40 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Println(string(reqBody))
 
-	var data ZoomData
+	var payload json.RawMessage
+	data := ZoomData{Payload: &payload}
 	err = json.Unmarshal(reqBody, &data)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	hasher := hmac.New(sha256.New, []byte(Secret))
-	hasher.Write([]byte(data.Payload.PlainToken))
+	switch data.Event {
+	case EndpointValidation:
+		var eventData URLValidation
+		err = json.Unmarshal([]byte(payload), &eventData)
+		if err != nil {
+			log.Println(err)
+		}
 
-	verification := Verification{PlainToken: data.Payload.PlainToken, EncryptedToken: hex.EncodeToString(hasher.Sum(nil))}
+		hasher := hmac.New(sha256.New, []byte(Secret))
+		hasher.Write([]byte(eventData.PlainToken))
 
-	retBody, err := json.Marshal(verification)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	log.Println(string(retBody))
+		eventData.EncryptedToken = hex.EncodeToString(hasher.Sum(nil))
 
-	w.Header().Set("Content-Type", "application/json")
-	_, err = w.Write(retBody)
-	if err != nil {
-		log.Println(err)
-		return
+		retBody, err := json.Marshal(eventData)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		log.Println(string(retBody))
+
+		w.Header().Set("Content-Type", "application/json")
+		_, err = w.Write(retBody)
+		if err != nil {
+			log.Println(err)
+			return
+		}
 	}
 
 }
