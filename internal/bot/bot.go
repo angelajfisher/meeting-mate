@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/angelajfisher/zoom-bot/internal/data"
 	"github.com/angelajfisher/zoom-bot/internal/interactions"
 	"github.com/bwmarrin/discordgo"
 )
@@ -19,6 +20,8 @@ func Run() {
 	if err != nil {
 		log.Fatalf("Invalid bot parameters: %v", err)
 	}
+
+	zoomListener()
 
 	session.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if i.Type != discordgo.InteractionApplicationCommand {
@@ -55,4 +58,15 @@ func Run() {
 	if err != nil {
 		log.Printf("could not close session gracefully: %s", err)
 	}
+}
+
+func zoomListener() {
+	go func() {
+		log.Println("Listening to data channel!")
+		for {
+			zoomData := <-data.DataChannel
+
+			log.Printf("Data received from channel: %v\n", zoomData)
+		}
+	}()
 }

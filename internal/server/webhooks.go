@@ -75,6 +75,8 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var botData data.EventData
+
 	if eventData.Event == data.EndpointValidation {
 		var payloadData URLValidation
 		err = json.Unmarshal(payload, &payloadData)
@@ -107,6 +109,8 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 		}
 
+		botData = data.EventData{EventType: eventData.Event, MeetingName: payloadData.Topic, ParticipantName: ""}
+
 		switch eventData.Event {
 		case data.MeetingStart:
 			log.Printf("Meeting '%v' started at %v\n", payloadData.Topic, payloadData.StartTime)
@@ -117,9 +121,16 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 		case data.ParticipantJoin:
 			log.Printf("%v joined '%v' at %v\n", payloadData.Participant.UserName, payloadData.Topic, payloadData.Participant.JoinTime)
 
+			botData.ParticipantName = payloadData.Participant.UserName
+
 		case data.ParticipantLeave:
 			log.Printf("%v left '%v' at %v\n", payloadData.Participant.UserName, payloadData.Topic, payloadData.Participant.LeaveTime)
+
+			botData.ParticipantName = payloadData.Participant.UserName
 		}
 	}
+
+	data.DataChannel <- botData
+	log.Printf("Sent to bot: %v\n", botData)
 
 }

@@ -13,3 +13,5 @@ const (
 	ParticipantJoin    = "meeting.participant_joined"
 	ParticipantLeave   = "meeting.participant_left"
 )
+
+var DataChannel = make(chan EventData)
