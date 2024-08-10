@@ -102,11 +102,15 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
-	} else {
+	} else if meetingID != "" {
 		var payloadData Meeting
 		err = json.Unmarshal(payload, &ObjectWrapper{&payloadData})
 		if err != nil {
 			log.Println(err)
+		}
+
+		if payloadData.ID != meetingID {
+			return
 		}
 
 		botData = data.EventData{EventType: eventData.Event, MeetingName: payloadData.Topic, ParticipantName: ""}
@@ -128,9 +132,9 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 
 			botData.ParticipantName = payloadData.Participant.UserName
 		}
-	}
 
-	data.DataChannel <- botData
-	log.Printf("Sent to bot: %v\n", botData)
+		data.MeetingData <- botData
+		log.Printf("Sent to bot: %v\n", botData)
+	}
 
 }

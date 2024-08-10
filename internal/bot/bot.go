@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/angelajfisher/zoom-bot/internal/data"
 	"github.com/angelajfisher/zoom-bot/internal/interactions"
 	"github.com/bwmarrin/discordgo"
 )
@@ -21,18 +20,19 @@ func Run() {
 		log.Fatalf("Invalid bot parameters: %v", err)
 	}
 
-	zoomListener()
-
 	session.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if i.Type != discordgo.InteractionApplicationCommand {
 			return
 		}
 
 		data := i.ApplicationCommandData()
-		if data.Name == "echo" {
+		switch data.Name {
+		case "echo":
 			interactions.HandleEcho(s, i, interactions.ParseOptions(data.Options))
-		} else if data.Name == "info" {
+		case "info":
 			interactions.HandleInfo(s, i, interactions.ParseOptions(data.Options))
+		case "watch":
+			interactions.HandleWatch(s, i, interactions.ParseOptions(data.Options))
 		}
 	})
 
@@ -40,7 +40,7 @@ func Run() {
 		log.Printf("Logged in as %s", r.User.String())
 	})
 
-	_, err = session.ApplicationCommandBulkOverwrite(AppID, "", interactions.List)
+	_, err = session.ApplicationCommandBulkOverwrite(AppID, "846466729600352317", interactions.List)
 	if err != nil {
 		log.Fatalf("could not register commands: %s", err)
 	}
@@ -58,15 +58,4 @@ func Run() {
 	if err != nil {
 		log.Printf("could not close session gracefully: %s", err)
 	}
-}
-
-func zoomListener() {
-	go func() {
-		log.Println("Listening to data channel!")
-		for {
-			zoomData := <-data.DataChannel
-
-			log.Printf("Data received from channel: %v\n", zoomData)
-		}
-	}()
 }

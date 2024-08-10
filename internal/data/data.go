@@ -14,4 +14,7 @@ const (
 	ParticipantLeave   = "meeting.participant_left"
 )
 
-var DataChannel = make(chan EventData)
+var (
+	MeetingData    = make(chan EventData)
+	WatchMeetingID = make(chan string)
+)

@@ -24,9 +24,25 @@ var List = []*discordgo.ApplicationCommand{
 				Type:        discordgo.ApplicationCommandOptionBoolean,
 			},
 		},
-	},{
+	}, {
 		Name:        "info",
 		Description: "Get the bot to display some info via embed",
+	}, {
+		Name:        "watch",
+		Description: "Begin watching a meeting's participant list",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Name:        "meeting_id",
+				Description: "ID of the Zoom meeting",
+				Type:        discordgo.ApplicationCommandOptionString,
+				Required:    true,
+			},
+			{
+				Name:        "silent",
+				Description: "Post status updates silently (no ping) - default: true",
+				Type:        discordgo.ApplicationCommandOptionBoolean,
+			},
+		},
 	},
 }
 

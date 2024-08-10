@@ -6,11 +6,16 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/angelajfisher/zoom-bot/internal/data"
 )
 
-var Port string
-var BaseURL string
-var StaticDir string
+var (
+	Port      string
+	BaseURL   string
+	StaticDir string
+	meetingID string
+)
 
 func Start(devMode bool) {
 
@@ -20,6 +25,14 @@ func Start(devMode bool) {
 	router.Handle("GET "+BaseURL+"/static/", http.StripPrefix(BaseURL+"/static/", fs))
 	router.HandleFunc("POST "+BaseURL+"/webhooks/", handleWebhooks)
 	router.HandleFunc("GET "+BaseURL+"/", handleIndex)
+
+	go func ()  {
+		for {
+			meetingID = <-data.WatchMeetingID
+
+			log.Printf("Received meeting ID to watch: %v\n", meetingID)
+		}
+	}()
 
 	log.Println("Zoom webhook listener starting on", Port)
 
