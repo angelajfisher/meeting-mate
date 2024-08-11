@@ -43,6 +43,9 @@ var List = []*discordgo.ApplicationCommand{
 				Type:        discordgo.ApplicationCommandOptionBoolean,
 			},
 		},
+	}, {
+		Name:        "cancel",
+		Description: "Cancel the current meeting watch",
 	},
 }
 

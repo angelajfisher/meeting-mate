@@ -33,6 +33,8 @@ func Run() {
 			interactions.HandleInfo(s, i, interactions.ParseOptions(data.Options))
 		case "watch":
 			interactions.HandleWatch(s, i, interactions.ParseOptions(data.Options))
+		case "cancel":
+			interactions.HandleCancel(s, i, interactions.ParseOptions(data.Options))
 		}
 	})
 
@@ -40,7 +42,7 @@ func Run() {
 		log.Printf("Logged in as %s", r.User.String())
 	})
 
-	_, err = session.ApplicationCommandBulkOverwrite(AppID, "846466729600352317", interactions.List)
+	_, err = session.ApplicationCommandBulkOverwrite(AppID, "", interactions.List)
 	if err != nil {
 		log.Fatalf("could not register commands: %s", err)
 	}

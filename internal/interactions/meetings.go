@@ -48,11 +48,11 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 		meetingEnded     = true
 		participantsList = make(map[string]string) // map[participantID]participantName
 	)
-	log.Println("Listening to data channel!")
 	for {
 		zoomData := <-types.MeetingData
-
-		log.Printf("Data received from channel: %v\n", zoomData)
+		if zoomData.EventType == types.Canceled {
+			break
+		}
 
 		if meetingEnded {
 			content.Embeds = []*discordgo.MessageEmbed{{
@@ -102,6 +102,17 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 		}
 	}
 
+	if meetingStatusMsg != nil {
+		content.Embeds[0].Description = "**Status Unknown**\nThe watch on this meeting was canceled."
+		content.Embeds[0].Fields = nil
+
+		updatedContent := discordgo.WebhookEdit{Embeds: &content.Embeds}
+		_, err = s.FollowupMessageEdit(i.Interaction, meetingStatusMsg.ID, &updatedContent)
+		if err != nil {
+			log.Panicf("could not respond to interaction: %s", err)
+		}
+	}
+
 }
 
 func stringifyParticipants(participants map[string]string) string {
@@ -110,4 +121,23 @@ func stringifyParticipants(participants map[string]string) string {
 		participantStr += name + "\n"
 	}
 	return participantStr
+}
+
+func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, opts optionMap) {
+	types.WatchMeetingID <- types.Canceled
+
+	err := s.UpdateCustomStatus("")
+	if err != nil {
+		log.Panicf("could not set custom status: %s", err)
+	}
+
+	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: "Canceled meeting watch.",
+		},
+	})
+	if err != nil {
+		log.Panicf("could not respond to interaction: %s", err)
+	}
 }

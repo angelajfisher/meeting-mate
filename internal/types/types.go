@@ -12,6 +12,7 @@ const (
 	MeetingEnd         = "meeting.ended"
 	ParticipantJoin    = "meeting.participant_joined"
 	ParticipantLeave   = "meeting.participant_left"
+	Canceled           = "canceled"
 )
 
 var (

@@ -30,7 +30,10 @@ func Start(devMode bool) {
 		for {
 			meetingID = <-types.WatchMeetingID
 
-			log.Printf("Received meeting ID to watch: %v\n", meetingID)
+			if meetingID == types.Canceled {
+				types.MeetingData <- types.EventData{EventType: types.Canceled}
+				meetingID = ""
+			}
 		}
 	}()
 
