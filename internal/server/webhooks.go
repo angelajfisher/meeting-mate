@@ -58,14 +58,11 @@ type ObjectWrapper struct {
 
 func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 
-	log.Println("Webhook received!")
-
 	reqBody, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	log.Println(string(reqBody))
 
 	var payload json.RawMessage
 	eventData := ZoomData{Payload: &payload}
@@ -78,6 +75,7 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 	var botData types.EventData
 
 	if eventData.Event == types.EndpointValidation {
+
 		var payloadData URLValidation
 		err = json.Unmarshal(payload, &payloadData)
 		if err != nil {
@@ -94,7 +92,6 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
-		log.Println(string(retBody))
 
 		w.Header().Set("Content-Type", "application/json")
 		_, err = w.Write(retBody)
@@ -102,7 +99,9 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
+
 	} else if meetingID != "" {
+
 		var payloadData Meeting
 		err = json.Unmarshal(payload, &ObjectWrapper{&payloadData})
 		if err != nil {
@@ -113,27 +112,15 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		botData = types.EventData{EventType: eventData.Event, MeetingName: payloadData.Topic, ParticipantName: ""}
+		botData = types.EventData{EventType: eventData.Event, MeetingName: payloadData.Topic}
 
-		switch eventData.Event {
-		case types.MeetingEnd:
-			log.Printf("Meeting '%v' ended at %v\n", payloadData.Topic, payloadData.EndTime)
-
-		case types.ParticipantJoin:
-			log.Printf("%v joined '%v' at %v\n", payloadData.Participant.UserName, payloadData.Topic, payloadData.Participant.JoinTime)
-
-			botData.ParticipantName = payloadData.Participant.UserName
-			botData.ParticipantID = payloadData.Participant.UserID
-
-		case types.ParticipantLeave:
-			log.Printf("%v left '%v' at %v\n", payloadData.Participant.UserName, payloadData.Topic, payloadData.Participant.LeaveTime)
-
+		if eventData.Event == types.ParticipantJoin || eventData.Event == types.ParticipantLeave {
 			botData.ParticipantName = payloadData.Participant.UserName
 			botData.ParticipantID = payloadData.Participant.UserID
 		}
 
 		types.MeetingData <- botData
-		log.Printf("Sent to bot: %v\n", botData)
+
 	} else {
 		return
 	}

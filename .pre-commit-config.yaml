@@ -18,5 +18,3 @@ repos:
     hooks:
       - id: golangci-lint-repo-mod
         args: [--fix]
-      - id: go-test-repo-mod
-        stages: [manual]

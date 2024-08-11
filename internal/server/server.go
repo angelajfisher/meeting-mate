@@ -46,7 +46,7 @@ func Start(devMode bool) {
 		err = http.ListenAndServeTLS(Port, os.Getenv("SSL_CERT"), os.Getenv("SSL_KEY"), router)
 	}
 	if err != nil {
-		log.Fatal("Could not start Zoom webhook listener:", err)
+		log.Fatal("ERROR: Could not start Zoom webhook listener:", err)
 	}
 
 }

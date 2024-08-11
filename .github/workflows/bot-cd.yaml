@@ -1,4 +1,4 @@
-name: Backend CD
+name: Bot CD
 
 on:
   push:

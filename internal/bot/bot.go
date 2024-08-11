@@ -17,7 +17,7 @@ var (
 func Run() {
 	session, err := discordgo.New("Bot " + BotToken)
 	if err != nil {
-		log.Fatalf("Invalid bot parameters: %v", err)
+		log.Fatalf("ERROR: Invalid bot parameters: %v", err)
 	}
 
 	session.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -27,8 +27,6 @@ func Run() {
 
 		data := i.ApplicationCommandData()
 		switch data.Name {
-		case "echo":
-			interactions.HandleEcho(s, i, interactions.ParseOptions(data.Options))
 		case "info":
 			interactions.HandleInfo(s, i, interactions.ParseOptions(data.Options))
 		case "watch":
@@ -39,17 +37,17 @@ func Run() {
 	})
 
 	session.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
-		log.Printf("Logged in as %s", r.User.String())
+		log.Println("Logged in as", r.User.String())
 	})
 
 	_, err = session.ApplicationCommandBulkOverwrite(AppID, "", interactions.List)
 	if err != nil {
-		log.Fatalf("could not register commands: %s", err)
+		log.Fatalf("ERROR: Could not register bot commands: %s", err)
 	}
 
 	err = session.Open()
 	if err != nil {
-		log.Fatalf("could not open session: %s", err)
+		log.Fatalf("ERROR: Could not open bot session: %s", err)
 	}
 
 	sigch := make(chan os.Signal, 1)

@@ -14,13 +14,13 @@ import (
 func main() {
 
 	devMode := flag.Bool("dev", false, "run the program in development mode")
-	envPath := flag.String("envFile", "", "program will load environment variables from the file at this path")
+	envPath := flag.String("envFile", "", "program will load environment variables from the file at this path if provided")
 	staticDir := flag.String("staticDir", "./static", "path to static directory containing site files")
 	webhookPort := flag.String("webhookPort", ":12345", "port at which the webhook server will listen for incoming hooks - default :12345")
 	flag.Parse()
 
 	if *devMode {
-		log.Println("WARN: Initializing Zoom Boot in DEVELOPMENT mode")
+		log.Println("WARN: Initializing Zoom Bot in DEVELOPMENT mode")
 	}
 
 	if *envPath != "" {
@@ -38,10 +38,9 @@ func main() {
 	bot.AppID = os.Getenv("APP_ID")
 
 	if bot.BotToken == "" || bot.AppID == "" || server.Secret == "" {
-		log.Fatal("ERROR: Please ensure your ZOOM_TOKEN, BOT_TOKEN, and APP_ID variables are in the environment before building.")
+		log.Fatal("ERROR: Please ensure your ZOOM_TOKEN, BOT_TOKEN, and APP_ID variables are in the environment before building or provide the path to an .env file with --envFile")
 	}
 
-	// TODO: Configure channels to share incoming info from Zoom w/ bot
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 	go func() {

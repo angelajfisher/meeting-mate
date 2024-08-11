@@ -28,7 +28,7 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 		},
 	})
 	if err != nil {
-		log.Panicf("could not respond to interaction: %s", err)
+		log.Printf("could not respond to interaction: %s", err)
 	}
 
 	types.WatchMeetingID <- meetingID
@@ -40,7 +40,7 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 
 	err = s.UpdateCustomStatus("Watching meeting ID " + meetingID)
 	if err != nil {
-		log.Panicf("could not set custom status: %s", err)
+		log.Printf("could not set custom status: %s", err)
 	}
 
 	var (
@@ -89,7 +89,7 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 			updatedContent := discordgo.WebhookEdit{Embeds: &content.Embeds}
 			meetingStatusMsg, err = s.FollowupMessageEdit(i.Interaction, meetingStatusMsg.ID, &updatedContent)
 			if err != nil {
-				log.Panicf("could not respond to interaction: %s", err)
+				log.Printf("could not respond to interaction: %s", err)
 			}
 			if meetingEnded {
 				meetingStatusMsg = nil
@@ -97,7 +97,7 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 		} else {
 			meetingStatusMsg, err = s.FollowupMessageCreate(i.Interaction, true, &content)
 			if err != nil {
-				log.Panicf("could not respond to interaction: %s", err)
+				log.Printf("could not respond to interaction: %s", err)
 			}
 		}
 	}
@@ -109,7 +109,7 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 		updatedContent := discordgo.WebhookEdit{Embeds: &content.Embeds}
 		_, err = s.FollowupMessageEdit(i.Interaction, meetingStatusMsg.ID, &updatedContent)
 		if err != nil {
-			log.Panicf("could not respond to interaction: %s", err)
+			log.Printf("could not respond to interaction: %s", err)
 		}
 	}
 
@@ -128,7 +128,7 @@ func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, opts opt
 
 	err := s.UpdateCustomStatus("")
 	if err != nil {
-		log.Panicf("could not set custom status: %s", err)
+		log.Printf("could not set custom status: %s", err)
 	}
 
 	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -138,6 +138,6 @@ func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, opts opt
 		},
 	})
 	if err != nil {
-		log.Panicf("could not respond to interaction: %s", err)
+		log.Printf("could not respond to interaction: %s", err)
 	}
 }
