@@ -116,9 +116,6 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 		botData = types.EventData{EventType: eventData.Event, MeetingName: payloadData.Topic, ParticipantName: ""}
 
 		switch eventData.Event {
-		case types.MeetingStart:
-			log.Printf("Meeting '%v' started at %v\n", payloadData.Topic, payloadData.StartTime)
-
 		case types.MeetingEnd:
 			log.Printf("Meeting '%v' ended at %v\n", payloadData.Topic, payloadData.EndTime)
 
@@ -126,11 +123,13 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 			log.Printf("%v joined '%v' at %v\n", payloadData.Participant.UserName, payloadData.Topic, payloadData.Participant.JoinTime)
 
 			botData.ParticipantName = payloadData.Participant.UserName
+			botData.ParticipantID = payloadData.Participant.UserID
 
 		case types.ParticipantLeave:
 			log.Printf("%v left '%v' at %v\n", payloadData.Participant.UserName, payloadData.Topic, payloadData.Participant.LeaveTime)
 
 			botData.ParticipantName = payloadData.Participant.UserName
+			botData.ParticipantID = payloadData.Participant.UserID
 		}
 
 		types.MeetingData <- botData

@@ -1,15 +1,16 @@
 package interactions
 
 import (
-	"encoding/json"
 	"log"
 	"strings"
 
-	"github.com/angelajfisher/zoom-bot/internal/data"
+	"github.com/angelajfisher/zoom-bot/internal/types"
 	"github.com/bwmarrin/discordgo"
 )
 
 func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts optionMap) {
+
+	meetingID := opts["meeting_id"].StringValue()
 
 	silent := true
 	if v, ok := opts["silent"]; ok && !v.BoolValue() {
@@ -18,7 +19,7 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 
 	builder := new(strings.Builder)
 
-	builder.WriteString("Initiating watch on meeting ID " + opts["meeting_id"].StringValue() + "! Stop at any time with /cancel")
+	builder.WriteString("Initiating watch on meeting ID " + meetingID + "!\nStop at any time with /cancel")
 
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -30,28 +31,83 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 		log.Panicf("could not respond to interaction: %s", err)
 	}
 
-	data.WatchMeetingID <- opts["meeting_id"].StringValue()
+	types.WatchMeetingID <- meetingID
 
 	var content discordgo.WebhookParams
 	if silent {
 		content.Flags = discordgo.MessageFlagsSuppressNotifications
 	}
+
+	err = s.UpdateCustomStatus("Watching meeting ID " + meetingID)
+	if err != nil {
+		log.Panicf("could not set custom status: %s", err)
+	}
+
+	var (
+		meetingStatusMsg *discordgo.Message
+		meetingEnded     = true
+		participantsList = make(map[string]string) // map[participantID]participantName
+	)
 	log.Println("Listening to data channel!")
 	for {
-		zoomData := <-data.MeetingData
+		zoomData := <-types.MeetingData
 
 		log.Printf("Data received from channel: %v\n", zoomData)
 
-		data, err := json.Marshal(zoomData)
-		if err != nil {
-			log.Panicf("could not marshal zoomData: %s", err)
+		if meetingEnded {
+			content.Embeds = []*discordgo.MessageEmbed{{
+				Type:        discordgo.EmbedTypeRich,
+				Title:       zoomData.MeetingName,
+				Description: "This meeting is ongoing.",
+				Fields: []*discordgo.MessageEmbedField{
+					{
+						Name:  "Current Participants",
+						Value: stringifyParticipants(participantsList),
+					},
+				},
+			}}
 		}
-		content.Content = string(data)
 
-		_, err = s.FollowupMessageCreate(i.Interaction, true, &content)
-		if err != nil {
-			log.Panicf("could not respond to interaction: %s", err)
+		switch zoomData.EventType {
+		case types.ParticipantJoin:
+			meetingEnded = false
+			participantsList[zoomData.ParticipantID] = zoomData.ParticipantName
+			content.Embeds[0].Fields[0].Value = stringifyParticipants(participantsList)
+
+		case types.ParticipantLeave:
+			delete(participantsList, zoomData.ParticipantID)
+			content.Embeds[0].Fields[0].Value = stringifyParticipants(participantsList)
+
+		case types.MeetingEnd:
+			clear(participantsList)
+			content.Embeds[0].Description = "This meeting has ended."
+			content.Embeds[0].Fields = nil
+			meetingEnded = true
+		}
+
+		if meetingStatusMsg != nil {
+			updatedContent := discordgo.WebhookEdit{Embeds: &content.Embeds}
+			meetingStatusMsg, err = s.FollowupMessageEdit(i.Interaction, meetingStatusMsg.ID, &updatedContent)
+			if err != nil {
+				log.Panicf("could not respond to interaction: %s", err)
+			}
+			if meetingEnded {
+				meetingStatusMsg = nil
+			}
+		} else {
+			meetingStatusMsg, err = s.FollowupMessageCreate(i.Interaction, true, &content)
+			if err != nil {
+				log.Panicf("could not respond to interaction: %s", err)
+			}
 		}
 	}
 
+}
+
+func stringifyParticipants(participants map[string]string) string {
+	participantStr := ""
+	for _, name := range participants {
+		participantStr += name + "\n"
+	}
+	return participantStr
 }
