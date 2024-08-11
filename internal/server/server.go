@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/angelajfisher/zoom-bot/internal/data"
+	"github.com/angelajfisher/zoom-bot/internal/types"
 )
 
 var (
@@ -26,9 +26,9 @@ func Start(devMode bool) {
 	router.HandleFunc("POST "+BaseURL+"/webhooks/", handleWebhooks)
 	router.HandleFunc("GET "+BaseURL+"/", handleIndex)
 
-	go func ()  {
+	go func() {
 		for {
-			meetingID = <-data.WatchMeetingID
+			meetingID = <-types.WatchMeetingID
 
 			log.Printf("Received meeting ID to watch: %v\n", meetingID)
 		}

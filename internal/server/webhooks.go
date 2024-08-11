@@ -9,7 +9,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/angelajfisher/zoom-bot/internal/data"
+	"github.com/angelajfisher/zoom-bot/internal/types"
 )
 
 var Secret string
@@ -75,9 +75,9 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var botData data.EventData
+	var botData types.EventData
 
-	if eventData.Event == data.EndpointValidation {
+	if eventData.Event == types.EndpointValidation {
 		var payloadData URLValidation
 		err = json.Unmarshal(payload, &payloadData)
 		if err != nil {
@@ -113,28 +113,30 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		botData = data.EventData{EventType: eventData.Event, MeetingName: payloadData.Topic, ParticipantName: ""}
+		botData = types.EventData{EventType: eventData.Event, MeetingName: payloadData.Topic, ParticipantName: ""}
 
 		switch eventData.Event {
-		case data.MeetingStart:
+		case types.MeetingStart:
 			log.Printf("Meeting '%v' started at %v\n", payloadData.Topic, payloadData.StartTime)
 
-		case data.MeetingEnd:
+		case types.MeetingEnd:
 			log.Printf("Meeting '%v' ended at %v\n", payloadData.Topic, payloadData.EndTime)
 
-		case data.ParticipantJoin:
+		case types.ParticipantJoin:
 			log.Printf("%v joined '%v' at %v\n", payloadData.Participant.UserName, payloadData.Topic, payloadData.Participant.JoinTime)
 
 			botData.ParticipantName = payloadData.Participant.UserName
 
-		case data.ParticipantLeave:
+		case types.ParticipantLeave:
 			log.Printf("%v left '%v' at %v\n", payloadData.Participant.UserName, payloadData.Topic, payloadData.Participant.LeaveTime)
 
 			botData.ParticipantName = payloadData.Participant.UserName
 		}
 
-		data.MeetingData <- botData
+		types.MeetingData <- botData
 		log.Printf("Sent to bot: %v\n", botData)
+	} else {
+		return
 	}
 
 }
