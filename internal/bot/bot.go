@@ -1,23 +1,28 @@
 package bot
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
 
-	"github.com/angelajfisher/zoom-bot/internal/interactions"
 	"github.com/bwmarrin/discordgo"
+
+	"github.com/angelajfisher/zoom-bot/internal/interactions"
 )
 
 var (
 	BotToken string
 	AppID    string
+	session  *discordgo.Session
 )
 
-func Run() {
-	session, err := discordgo.New("Bot " + BotToken)
+func Run() error {
+
+	var err error
+	session, err = discordgo.New("Bot " + BotToken)
 	if err != nil {
-		log.Fatalf("ERROR: Invalid bot parameters: %v", err)
+		return fmt.Errorf("Invalid bot parameters: %v", err)
 	}
 
 	session.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -42,20 +47,35 @@ func Run() {
 
 	_, err = session.ApplicationCommandBulkOverwrite(AppID, "", interactions.List)
 	if err != nil {
-		log.Fatalf("ERROR: Could not register bot commands: %s", err)
+		return fmt.Errorf("Could not register bot commands: %v", err)
 	}
 
 	err = session.Open()
 	if err != nil {
-		log.Fatalf("ERROR: Could not open bot session: %s", err)
+		return fmt.Errorf("Could not open bot session: %v", err)
 	}
 
 	sigch := make(chan os.Signal, 1)
 	signal.Notify(sigch, os.Interrupt)
 	<-sigch
+	return nil
 
-	err = session.Close()
-	if err != nil {
-		log.Printf("could not close session gracefully: %s", err)
+}
+
+func Stop() error {
+
+	if session == nil {
+		return nil
 	}
+
+	fmt.Print("Bot shutting down...")
+
+	err := session.Close()
+	if err != nil {
+		return fmt.Errorf("Could not close bot session gracefully: %v", err)
+	}
+
+	fmt.Print("Done!\n")
+	return nil
+
 }

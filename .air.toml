@@ -17,7 +17,7 @@ include_ext = ["go", "tpl", "tmpl", "html"]
 # Ignore these filename extensions or directories.
 exclude_dir = ["assets", "tmp", "vendor"]
 # Watch these directories if you specified.
-include_dir = ["cmd", "internal", "static"]
+include_dir = ["cmd", "internal"]
 # Watch these files.
 include_file = []
 # Exclude files.
@@ -33,15 +33,15 @@ log = "air.log"
 # Poll files for changes instead of using fsnotify.
 poll = true
 # Poll interval (defaults to the minimum interval of 500ms).
-poll_interval = 500 # ms
+poll_interval = 1000 # ms
 # It's not necessary to trigger build each time file changes if it's too frequent.
-delay = 0 # ms
+delay = 500 # ms
 # Stop running old binary when build errors occur.
 stop_on_error = true
 # Send Interrupt signal before killing process (windows does not support this feature)
-send_interrupt = false
+send_interrupt = true
 # Delay after sending Interrupt signal
-kill_delay = 500 # nanosecond
+kill_delay = 5000000000 # nanosecond
 # Rerun binary or not
 rerun = false
 # Delay after each executions

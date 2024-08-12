@@ -1,6 +1,8 @@
 package server
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -15,9 +17,10 @@ var (
 	BaseURL   string
 	StaticDir string
 	meetingID string
+	server    *http.Server
 )
 
-func Start(devMode bool) {
+func Start(devMode bool) error {
 
 	router := http.NewServeMux()
 	fs := http.FileServer(http.Dir(StaticDir))
@@ -37,17 +40,42 @@ func Start(devMode bool) {
 		}
 	}()
 
+	server = &http.Server{Addr: Port, Handler: router}
+
 	log.Println("Zoom webhook listener starting on", Port)
 
 	var err error
 	if devMode {
-		err = http.ListenAndServe(Port, router)
+		err = server.ListenAndServe()
 	} else {
-		err = http.ListenAndServeTLS(Port, os.Getenv("SSL_CERT"), os.Getenv("SSL_KEY"), router)
+		err = server.ListenAndServeTLS(os.Getenv("SSL_CERT"), os.Getenv("SSL_KEY"))
 	}
 	if err != nil {
-		log.Fatal("ERROR: Could not start Zoom webhook listener:", err)
+		return fmt.Errorf("could not start Zoom webhook listener: %w", err)
 	}
+
+	return nil
+
+}
+
+func Stop() error {
+
+	if server == nil {
+		return nil
+	}
+
+	fmt.Print("Server shutting down...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := server.Shutdown(ctx)
+	if err != nil {
+		return fmt.Errorf("could not shutdown server gracefully: %v", err)
+	}
+
+	fmt.Print("Done!\n")
+	return nil
 
 }
 
