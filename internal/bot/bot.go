@@ -70,6 +70,11 @@ func Stop() error {
 
 	fmt.Print("Bot shutting down...")
 
+	// Notify all active watchers of shutdown
+	for _, c := range interactions.Watchers {
+		c <- false
+	}
+
 	err := session.Close()
 	if err != nil {
 		return fmt.Errorf("Could not close bot session gracefully: %v", err)

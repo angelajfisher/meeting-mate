@@ -33,8 +33,12 @@ func Start(devMode bool) error {
 		for {
 			meetingID = <-types.WatchMeetingID
 
-			if meetingID == types.Canceled {
+			switch meetingID {
+			case types.Canceled:
 				types.MeetingData <- types.EventData{EventType: types.Canceled}
+				meetingID = ""
+			case types.Shutdown:
+				types.MeetingData <- types.EventData{EventType: types.Shutdown}
 				meetingID = ""
 			}
 		}

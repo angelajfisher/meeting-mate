@@ -13,9 +13,10 @@ const (
 	ParticipantJoin    = "meeting.participant_joined"
 	ParticipantLeave   = "meeting.participant_left"
 	Canceled           = "canceled"
+	Shutdown           = "shutdown"
 )
 
 var (
-	MeetingData    = make(chan EventData)
+	MeetingData    = make(chan EventData, 5)
 	WatchMeetingID = make(chan string)
 )

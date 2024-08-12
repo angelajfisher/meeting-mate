@@ -8,6 +8,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+var Watchers []chan bool
+
 func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts optionMap) {
 
 	meetingID := opts["meeting_id"].StringValue()
@@ -20,6 +22,13 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 	builder := new(strings.Builder)
 
 	builder.WriteString("Initiating watch on meeting ID " + meetingID + "!\nStop at any time with /cancel")
+
+	shutdownCh := make(chan bool)
+	Watchers = append(Watchers, shutdownCh)
+	go func() {
+		<-shutdownCh
+		types.WatchMeetingID <- types.Shutdown
+	}()
 
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -48,9 +57,12 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 		meetingEnded     = true
 		participantsList = make(map[string]string) // map[participantID]participantName
 	)
-	for {
-		zoomData := <-types.MeetingData
+	for zoomData := range types.MeetingData {
 		if zoomData.EventType == types.Canceled {
+			content.Embeds[0].Description = "**Status Unknown**\nThe watch on this meeting was canceled."
+			break
+		} else if zoomData.EventType == types.Shutdown {
+			content.Embeds[0].Description = "**Status Unknown**\nThe watch has stopped due to bot shutdown."
 			break
 		}
 
@@ -103,9 +115,7 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 	}
 
 	if meetingStatusMsg != nil {
-		content.Embeds[0].Description = "**Status Unknown**\nThe watch on this meeting was canceled."
 		content.Embeds[0].Fields = nil
-
 		updatedContent := discordgo.WebhookEdit{Embeds: &content.Embeds}
 		_, err = s.FollowupMessageEdit(i.Interaction, meetingStatusMsg.ID, &updatedContent)
 		if err != nil {
