@@ -8,7 +8,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 
-	"github.com/angelajfisher/zoom-bot/internal/interactions"
+	"github.com/angelajfisher/zoom-bot/internal/bot/interactions"
 )
 
 var (
@@ -32,8 +32,6 @@ func Run() error {
 
 		data := i.ApplicationCommandData()
 		switch data.Name {
-		case "info":
-			interactions.HandleInfo(s, i, interactions.ParseOptions(data.Options))
 		case "watch":
 			interactions.HandleWatch(s, i, interactions.ParseOptions(data.Options))
 		case "cancel":
@@ -45,7 +43,7 @@ func Run() error {
 		log.Println("Logged in as", r.User.String())
 	})
 
-	_, err = session.ApplicationCommandBulkOverwrite(AppID, "", interactions.List)
+	_, err = session.ApplicationCommandBulkOverwrite(AppID, "", interactions.InteractionList)
 	if err != nil {
 		return fmt.Errorf("Could not register bot commands: %v", err)
 	}

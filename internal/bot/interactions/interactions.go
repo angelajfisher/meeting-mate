@@ -4,11 +4,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var List = []*discordgo.ApplicationCommand{
+var InteractionList = []*discordgo.ApplicationCommand{
 	{
-		Name:        "info",
-		Description: "Get the bot to display some info via embed",
-	}, {
 		Name:        "watch",
 		Description: "Begin watching a meeting's participant list",
 		Options: []*discordgo.ApplicationCommandOption{
@@ -20,7 +17,7 @@ var List = []*discordgo.ApplicationCommand{
 			},
 			{
 				Name:        "silent",
-				Description: "Post status updates silently (no ping) - default: true",
+				Description: "Post status updates @silent-ly (default: true)",
 				Type:        discordgo.ApplicationCommandOptionBoolean,
 			},
 		},

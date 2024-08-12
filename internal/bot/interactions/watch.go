@@ -4,8 +4,9 @@ import (
 	"log"
 	"strings"
 
-	"github.com/angelajfisher/zoom-bot/internal/types"
 	"github.com/bwmarrin/discordgo"
+
+	"github.com/angelajfisher/zoom-bot/internal/types"
 )
 
 var Watchers []chan bool
@@ -131,23 +132,4 @@ func stringifyParticipants(participants map[string]string) string {
 		participantStr += name + "\n"
 	}
 	return participantStr
-}
-
-func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, opts optionMap) {
-	types.WatchMeetingID <- types.Canceled
-
-	err := s.UpdateCustomStatus("")
-	if err != nil {
-		log.Printf("could not set custom status: %s", err)
-	}
-
-	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: "Canceled meeting watch.",
-		},
-	})
-	if err != nil {
-		log.Printf("could not respond to interaction: %s", err)
-	}
 }
