@@ -4,24 +4,22 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/bwmarrin/discordgo"
-
 	"github.com/angelajfisher/zoom-bot/internal/bot/interactions"
+	"github.com/bwmarrin/discordgo"
 )
 
 var (
 	BotToken string
 	AppID    string
 	session  *discordgo.Session
-	stop     chan chan struct{}
+	stop     chan struct{}
 )
 
 func Run() error {
-
 	var err error
 	session, err = discordgo.New("Bot " + BotToken)
 	if err != nil {
-		return fmt.Errorf("Invalid bot parameters: %v", err)
+		return fmt.Errorf("invalid bot parameters: %w", err)
 	}
 
 	session.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -38,32 +36,30 @@ func Run() error {
 		}
 	})
 
-	session.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
+	session.AddHandler(func(_ *discordgo.Session, r *discordgo.Ready) {
 		log.Println("Logged in as", r.User.String())
 	})
 
 	_, err = session.ApplicationCommandBulkOverwrite(AppID, "", interactions.InteractionList)
 	if err != nil {
-		return fmt.Errorf("Could not register bot commands: %v", err)
+		return fmt.Errorf("could not register bot commands: %w", err)
 	}
 
 	err = session.Open()
 	if err != nil {
-		return fmt.Errorf("Could not open bot session: %v", err)
+		return fmt.Errorf("could not open bot session: %w", err)
 	}
 
 	// Listen for shutdown signal
 	<-stop
 	err = session.Close()
 	if err != nil {
-		return fmt.Errorf("Could not close bot session gracefully: %v", err)
+		return fmt.Errorf("could not close bot session gracefully: %w", err)
 	}
 	return nil
-
 }
 
 func Stop() error {
-
 	if session == nil {
 		return nil
 	}
@@ -72,16 +68,13 @@ func Stop() error {
 
 	// Notify all active watchers of shutdown
 	for _, c := range interactions.Watchers {
-		c <- false
+		c <- struct{}{}
 	}
 
 	go func() {
-		q := make(chan struct{})
-		stop <- q
-		<-q
+		stop <- struct{}{}
 	}()
 
 	fmt.Print("Done!\n")
 	return nil
-
 }
