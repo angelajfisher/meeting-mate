@@ -1,4 +1,5 @@
 services:
+
   bot:
     build:
       dockerfile: Dockerfile.dev
@@ -10,3 +11,12 @@ services:
     volumes:
       - .:/app
     command: bash -c "go mod tidy && air /cmd/main.go -b 0.0.0.0"
+
+  # tailwind compiler for dev
+  tailwind:
+    image: node:lts-slim
+    volumes:
+      - .:/app
+    working_dir: /app
+    tty: true
+    command: bash -c "npm i tailwindcss && npx tailwindcss -i ./static/css/config.css -o ./static/css/min.style.css --minify --watch"

@@ -25,3 +25,8 @@ go.work
 
 # Air compilation folder
 tmp
+
+# Building Tailwind CSS
+node_modules
+package-lock.json
+package.json

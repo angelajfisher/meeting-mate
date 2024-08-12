@@ -19,6 +19,13 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            static/css/min.style.css
+            static/images
+            static/js
+            static/index.html
+          sparse-checkout-cone-mode: false
       - name: Upload static dir as artifact
         uses: actions/upload-artifact@v4
         id: artifact-upload
