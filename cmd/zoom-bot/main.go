@@ -24,7 +24,7 @@ func main() {
 	}
 
 	osSignal := make(chan os.Signal, 1)
-	signal.Notify(osSignal, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
+	signal.Notify(osSignal, syscall.SIGINT, syscall.SIGTERM)
 
 	g := run.Group{}
 
@@ -32,7 +32,6 @@ func main() {
 		<-osSignal
 		return nil
 	}, func(error) {
-		fmt.Println("Shutdown request received. Initiating graceful shutdown...")
 		close(osSignal)
 	})
 
@@ -52,7 +51,8 @@ func main() {
 
 	err = g.Run()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error:\n%v", err)
+		fmt.Fprintf(os.Stderr, "fatal error: %s", err)
+		os.Exit(1)
 	}
 
 	fmt.Println("See you later! o/")

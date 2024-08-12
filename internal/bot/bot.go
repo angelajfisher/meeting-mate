@@ -3,8 +3,6 @@ package bot
 import (
 	"fmt"
 	"log"
-	"os"
-	"os/signal"
 
 	"github.com/bwmarrin/discordgo"
 
@@ -15,6 +13,7 @@ var (
 	BotToken string
 	AppID    string
 	session  *discordgo.Session
+	stop     chan chan struct{}
 )
 
 func Run() error {
@@ -53,9 +52,12 @@ func Run() error {
 		return fmt.Errorf("Could not open bot session: %v", err)
 	}
 
-	sigch := make(chan os.Signal, 1)
-	signal.Notify(sigch, os.Interrupt)
-	<-sigch
+	// Listen for shutdown signal
+	<-stop
+	err = session.Close()
+	if err != nil {
+		return fmt.Errorf("Could not close bot session gracefully: %v", err)
+	}
 	return nil
 
 }
@@ -73,10 +75,11 @@ func Stop() error {
 		c <- false
 	}
 
-	err := session.Close()
-	if err != nil {
-		return fmt.Errorf("Could not close bot session gracefully: %v", err)
-	}
+	go func() {
+		q := make(chan struct{})
+		stop <- q
+		<-q
+	}()
 
 	fmt.Print("Done!\n")
 	return nil
