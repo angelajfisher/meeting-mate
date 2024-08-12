@@ -29,6 +29,8 @@ func Start(devMode bool) error {
 	router.HandleFunc("POST "+BaseURL+"/webhooks/", handleWebhooks)
 	router.HandleFunc("GET "+BaseURL+"/", handleIndex)
 
+	server = &http.Server{Addr: Port, Handler: router}
+
 	go func() {
 		for {
 			meetingID = <-types.WatchMeetingID
@@ -43,8 +45,6 @@ func Start(devMode bool) error {
 			}
 		}
 	}()
-
-	server = &http.Server{Addr: Port, Handler: router}
 
 	log.Println("Zoom webhook listener starting on", Port)
 
@@ -90,7 +90,6 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, filepath.Join(StaticDir, "/index.html"))
 
 	elapsedTime := time.Since(startTime)
-	formattedTime := time.Now().Format("2006-01-02 15:04:05")
-	log.Printf("[%s] %s '%s' in %s\n", formattedTime, r.Method, r.URL.Path[len(BaseURL):], elapsedTime)
+	log.Printf("[%s] %s '%s' in %s\n", types.CurrentTime(), r.Method, r.URL.Path[len(BaseURL):], elapsedTime)
 
 }

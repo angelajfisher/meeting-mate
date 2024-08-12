@@ -10,10 +10,12 @@ import (
 )
 
 var Watchers []chan bool
+var meetingID string
 
 func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts optionMap) {
 
-	meetingID := opts["meeting_id"].StringValue()
+	meetingID = opts["meeting_id"].StringValue()
+	log.Printf("[%s] %s /watch ID %s", types.CurrentTime(), i.Member.User, meetingID)
 
 	silent := true
 	if v, ok := opts["silent"]; ok && !v.BoolValue() {
@@ -127,9 +129,11 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 }
 
 func stringifyParticipants(participants map[string]string) string {
+
 	participantStr := ""
 	for _, name := range participants {
 		participantStr += name + "\n"
 	}
 	return participantStr
+
 }

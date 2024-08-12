@@ -9,7 +9,17 @@ import (
 )
 
 func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, opts optionMap) {
+
+	log.Printf("[%s] %s /cancel ID %s", types.CurrentTime(), i.Member.User, meetingID)
+
 	types.WatchMeetingID <- types.Canceled
+
+	var content string
+	if meetingID == "" {
+		content = "Nothing to cancel -- no meetings are currently being watched."
+	} else {
+		content = "Canceled watch on meeting " + meetingID + "."
+	}
 
 	err := s.UpdateCustomStatus("")
 	if err != nil {
@@ -19,10 +29,11 @@ func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, opts opt
 	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: "Canceled meeting watch.",
+			Content: content,
 		},
 	})
 	if err != nil {
 		log.Printf("could not respond to interaction: %s", err)
 	}
+
 }
