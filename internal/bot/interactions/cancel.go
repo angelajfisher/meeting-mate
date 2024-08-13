@@ -3,14 +3,12 @@ package interactions
 import (
 	"log"
 
-	"github.com/bwmarrin/discordgo"
-
 	"github.com/angelajfisher/zoom-bot/internal/types"
+	"github.com/bwmarrin/discordgo"
 )
 
-func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, opts optionMap) {
-
-	log.Printf("[%s] %s /cancel ID %s", types.CurrentTime(), i.Member.User, meetingID)
+func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, _ optionMap) {
+	log.Printf("[%s] %s: /cancel ID %s", types.CurrentTime(), i.Member.User, meetingID)
 
 	types.WatchMeetingID <- types.Canceled
 
@@ -19,6 +17,7 @@ func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, opts opt
 		content = "Nothing to cancel -- no meetings are currently being watched."
 	} else {
 		content = "Canceled watch on meeting " + meetingID + "."
+		meetingID = ""
 	}
 
 	err := s.UpdateCustomStatus("")
@@ -35,5 +34,4 @@ func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, opts opt
 	if err != nil {
 		log.Printf("could not respond to interaction: %s", err)
 	}
-
 }
