@@ -21,7 +21,6 @@ var (
 )
 
 func Start(devMode bool) error {
-
 	router := http.NewServeMux()
 	fs := http.FileServer(http.Dir(StaticDir))
 
@@ -29,7 +28,14 @@ func Start(devMode bool) error {
 	router.HandleFunc("POST "+BaseURL+"/webhooks/", handleWebhooks)
 	router.HandleFunc("GET "+BaseURL+"/", handleIndex)
 
-	server = &http.Server{Addr: Port, Handler: router}
+	server = &http.Server{
+		Addr:              Port,
+		Handler:           http.TimeoutHandler(router, 5*time.Second, "Oops, timed out!"),
+		ReadTimeout:       1 * time.Second,
+		WriteTimeout:      5 * time.Second,
+		IdleTimeout:       30 * time.Second,
+		ReadHeaderTimeout: 2 * time.Second,
+	}
 
 	go func() {
 		for {
@@ -37,11 +43,11 @@ func Start(devMode bool) error {
 
 			switch meetingID {
 			case types.Canceled:
+				meetingID = ""
 				types.MeetingData <- types.EventData{EventType: types.Canceled}
-				meetingID = ""
 			case types.Shutdown:
-				types.MeetingData <- types.EventData{EventType: types.Shutdown}
 				meetingID = ""
+				types.MeetingData <- types.EventData{EventType: types.Shutdown}
 			}
 		}
 	}()
@@ -59,11 +65,9 @@ func Start(devMode bool) error {
 	}
 
 	return nil
-
 }
 
 func Stop() error {
-
 	if server == nil {
 		return nil
 	}
@@ -75,21 +79,18 @@ func Stop() error {
 
 	err := server.Shutdown(ctx)
 	if err != nil {
-		return fmt.Errorf("could not shutdown server gracefully: %v", err)
+		return fmt.Errorf("could not shutdown server gracefully: %w", err)
 	}
 
 	fmt.Print("Done!\n")
 	return nil
-
 }
 
 func handleIndex(w http.ResponseWriter, r *http.Request) {
-
 	startTime := time.Now()
 
 	http.ServeFile(w, r, filepath.Join(StaticDir, "/index.html"))
 
 	elapsedTime := time.Since(startTime)
 	log.Printf("[%s] %s '%s' in %s\n", types.CurrentTime(), r.Method, r.URL.Path[len(BaseURL):], elapsedTime)
-
 }
