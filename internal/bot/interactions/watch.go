@@ -32,6 +32,7 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 
 	if newMeetingID == meetingID {
 		responseMsg = "Watch on meeting ID " + newMeetingID + " is already ongoing."
+		// TODO: make this response ephemeral, then disregard request
 	} else {
 		meetingID = newMeetingID
 		responseMsg = "Initiating watch on meeting ID " + newMeetingID + "!\nStop at any time with /cancel"
@@ -96,8 +97,12 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 		}
 
 		if meetingStatusRes != nil {
-			updatedContent := discordgo.WebhookEdit{Embeds: &meetingMsgContent.Embeds}
-			if meetingStatusRes, err = s.FollowupMessageEdit(i.Interaction, meetingStatusRes.ID, &updatedContent); err != nil {
+			updatedContent := discordgo.MessageEdit{
+				Embeds:  &meetingMsgContent.Embeds,
+				ID:      meetingStatusRes.ID,
+				Channel: meetingStatusRes.ChannelID,
+			}
+			if meetingStatusRes, err = s.ChannelMessageEditComplex(&updatedContent); err != nil {
 				log.Printf("could not respond to interaction: %s", err)
 			}
 			if !meetingInProgress {
@@ -112,8 +117,12 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 
 	if meetingStatusRes != nil {
 		meetingMsgContent.Embeds[0].Fields = nil
-		updatedContent := discordgo.WebhookEdit{Embeds: &meetingMsgContent.Embeds}
-		if _, err = s.FollowupMessageEdit(i.Interaction, meetingStatusRes.ID, &updatedContent); err != nil {
+		updatedContent := discordgo.MessageEdit{
+			Embeds:  &meetingMsgContent.Embeds,
+			ID:      meetingStatusRes.ID,
+			Channel: meetingStatusRes.ChannelID,
+		}
+		if _, err = s.ChannelMessageEditComplex(&updatedContent); err != nil {
 			log.Printf("could not respond to interaction: %s", err)
 		}
 	}
