@@ -32,10 +32,28 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 		sendSilently = v.BoolValue()
 	}
 
-	if newMeetingID == meetingID {
-		responseMsg = "Watch on meeting ID " + newMeetingID + " is already ongoing."
-		// TODO: make this response ephemeral, then disregard request
-	} else {
+	switch {
+	case newMeetingID == "":
+		responseMsg = "Please supply a meeting ID to watch."
+
+	case newMeetingID == meetingID:
+		if err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Watch on meeting ID " + newMeetingID + " is already ongoing.",
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		}); err != nil {
+			log.Printf("could not respond to interaction: %s", err)
+		}
+		return
+
+	case meetingID != "":
+		meetingID = newMeetingID
+		responseMsg = "Canceling watch on meeting ID " + meetingID +
+			" and starting new watch on meeting ID " + newMeetingID + "!\nStop at any time with /cancel"
+
+	case meetingID == "":
 		meetingID = newMeetingID
 		responseMsg = "Initiating watch on meeting ID " + newMeetingID + "!\nStop at any time with /cancel"
 	}
