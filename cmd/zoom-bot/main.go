@@ -32,6 +32,10 @@ func main() {
 		return nil
 	}, func(error) {
 		close(osSignal)
+		err = bot.Stop()
+		if err != nil {
+			log.Println(err)
+		}
 	})
 
 	g.Add(func() error { return server.Start(*devMode) }, func(error) {
@@ -41,12 +45,11 @@ func main() {
 		}
 	})
 
-	g.Add(bot.Run, func(error) {
-		err = bot.Stop()
-		if err != nil {
-			log.Println(err)
-		}
-	})
+	err = bot.Run()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "fatal error: %s", err)
+		os.Exit(1)
+	}
 
 	err = g.Run()
 	if err != nil {

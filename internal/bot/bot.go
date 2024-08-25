@@ -12,7 +12,6 @@ var (
 	BotToken string
 	AppID    string
 	session  *discordgo.Session
-	stop     chan struct{}
 )
 
 func Run() error {
@@ -49,13 +48,6 @@ func Run() error {
 	if err != nil {
 		return fmt.Errorf("could not open bot session: %w", err)
 	}
-
-	// Listen for shutdown signal
-	<-stop
-	err = session.Close()
-	if err != nil {
-		return fmt.Errorf("could not close bot session gracefully: %w", err)
-	}
 	return nil
 }
 
@@ -71,9 +63,10 @@ func Stop() error {
 		c <- struct{}{}
 	}
 
-	go func() {
-		stop <- struct{}{}
-	}()
+	err := session.Close()
+	if err != nil {
+		return fmt.Errorf("could not close session gracefully: %w", err)
+	}
 
 	fmt.Print("Done!\n")
 	return nil
