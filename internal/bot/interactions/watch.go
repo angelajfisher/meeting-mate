@@ -72,6 +72,15 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 	var meetingStatusRes *discordgo.Message
 
 	for zoomData := range types.MeetingData {
+		if zoomData.EventType == types.Canceled {
+			meetingMsgContent.Embeds[0].Description = "**Status Unknown**\nThe watch on this meeting was canceled."
+			break
+		} else if zoomData.EventType == types.Shutdown {
+			meetingMsgContent.Embeds[0].Description = "**Status Unknown**\nThe watch stopped due to bot shutdown." +
+				" Please restart with /watch when available."
+			break
+		}
+
 		if meetingStatusRes == nil {
 			meetingStatusRes, err = s.FollowupMessageCreate(i.Interaction, true, meetingMsgContent)
 			if err != nil {
@@ -109,19 +118,11 @@ func updateMeetingMsg(
 		err               error
 	)
 
-	if zoomData.EventType == types.Canceled {
-		meetingMsgContent.Embeds[0].Description = "**Status Unknown**\nThe watch on this meeting was canceled."
-		return meetingStatusRes, nil
-	} else if zoomData.EventType == types.Shutdown {
-		meetingMsgContent.Embeds[0].Description = "**Status Unknown**\nThe watch has stopped due to bot shutdown."
-		return meetingStatusRes, nil
-	}
-
 	// If there wasn't a meeting in progress before this data came in, start a new meeting message
 	if !meetingInProgress {
 		meetingInProgress = true
 		meetingMsgContent.Embeds[0].Title = zoomData.MeetingName
-		meetingMsgContent.Embeds[0].Description = "This meeting is ongoing."
+		meetingMsgContent.Embeds[0].Description = "This meeting is in progress."
 		meetingMsgContent.Embeds[0].Fields = []*discordgo.MessageEmbedField{{Name: "Current Participants"}}
 	}
 
@@ -136,7 +137,7 @@ func updateMeetingMsg(
 
 	case types.MeetingEnd:
 		clear(participantsList)
-		meetingMsgContent.Embeds[0].Description = "This meeting has ended."
+		meetingMsgContent.Embeds[0].Description = "This meeting ended."
 		meetingMsgContent.Embeds[0].Fields = nil
 		meetingInProgress = false
 	}
