@@ -24,7 +24,7 @@ jobs:
             static/css/min.style.css
             static/images
             static/js
-            static/index.html
+            static/*.html
           sparse-checkout-cone-mode: false
       - name: Upload static dir as artifact
         uses: actions/upload-artifact@v4

@@ -26,6 +26,7 @@ func Start(devMode bool) error {
 
 	router.Handle("GET "+BaseURL+"/static/", http.StripPrefix(BaseURL+"/static/", fs))
 	router.HandleFunc("POST "+BaseURL+"/webhooks/", handleWebhooks)
+	router.HandleFunc("GET "+BaseURL+"/docs", handleDocs)
 	router.HandleFunc("GET "+BaseURL+"/", handleIndex)
 
 	server = &http.Server{
@@ -90,6 +91,15 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
 
 	http.ServeFile(w, r, filepath.Join(StaticDir, "/index.html"))
+
+	elapsedTime := time.Since(startTime)
+	log.Printf("%s '%s' in %s\n", r.Method, r.URL.Path[len(BaseURL):], elapsedTime)
+}
+
+func handleDocs(w http.ResponseWriter, r *http.Request) {
+	startTime := time.Now()
+
+	http.ServeFile(w, r, filepath.Join(StaticDir, "/docs.html"))
 
 	elapsedTime := time.Since(startTime)
 	log.Printf("%s '%s' in %s\n", r.Method, r.URL.Path[len(BaseURL):], elapsedTime)
