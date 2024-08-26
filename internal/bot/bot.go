@@ -3,6 +3,7 @@ package bot
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/angelajfisher/zoom-bot/internal/bot/interactions"
 	"github.com/bwmarrin/discordgo"
@@ -62,6 +63,9 @@ func Stop() error {
 	for _, c := range interactions.Watchers {
 		c <- struct{}{}
 	}
+
+	// Give watchers time to stop
+	time.Sleep(1 * time.Second)
 
 	err := session.Close()
 	if err != nil {

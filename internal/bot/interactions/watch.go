@@ -81,7 +81,7 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 		log.Printf("could not set custom status: %s", err)
 	}
 
-	meetingMsgContent := &discordgo.WebhookParams{Embeds: []*discordgo.MessageEmbed{{Type: discordgo.EmbedTypeRich,
+	meetingMsgContent := &discordgo.MessageSend{Embeds: []*discordgo.MessageEmbed{{Type: discordgo.EmbedTypeRich,
 		Description: "Loading..."}}}
 	if sendSilently {
 		meetingMsgContent.Flags = discordgo.MessageFlagsSuppressNotifications
@@ -100,7 +100,7 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 		}
 
 		if meetingStatusRes == nil {
-			meetingStatusRes, err = s.FollowupMessageCreate(i.Interaction, true, meetingMsgContent)
+			meetingStatusRes, err = s.ChannelMessageSendComplex(i.Interaction.ChannelID, meetingMsgContent)
 			if err != nil {
 				log.Printf("could not respond to interaction: %s", err)
 			}
@@ -128,7 +128,7 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 func updateMeetingMsg(
 	s *discordgo.Session,
 	zoomData types.EventData,
-	meetingMsgContent *discordgo.WebhookParams,
+	meetingMsgContent *discordgo.MessageSend,
 	meetingStatusRes *discordgo.Message,
 ) (*discordgo.Message, error) {
 	var (
