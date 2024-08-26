@@ -8,13 +8,13 @@ import (
 )
 
 func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, _ optionMap) {
-	log.Printf("[%s] %s: /cancel ID %s", types.CurrentTime(), i.Member.User, meetingID)
+	log.Printf("%s: /cancel ID %s", i.Member.User, meetingID)
 
 	types.WatchMeetingID <- types.Canceled
 
 	var content string
 	if meetingID == "" {
-		content = "Nothing to cancel -- no meetings are currently being watched."
+		content = "Nothing to cancel: no meetings are currently being watched."
 	} else {
 		content = "Canceled watch on meeting " + meetingID + "."
 		meetingID = ""

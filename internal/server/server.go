@@ -92,5 +92,5 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, filepath.Join(StaticDir, "/index.html"))
 
 	elapsedTime := time.Since(startTime)
-	log.Printf("[%s] %s '%s' in %s\n", types.CurrentTime(), r.Method, r.URL.Path[len(BaseURL):], elapsedTime)
+	log.Printf("%s '%s' in %s\n", r.Method, r.URL.Path[len(BaseURL):], elapsedTime)
 }

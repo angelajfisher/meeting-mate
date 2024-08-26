@@ -26,7 +26,7 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 		responseMsg  string
 		shutdownCh   = make(chan struct{})
 	)
-	log.Printf("[%s] %s: /watch ID %s", types.CurrentTime(), i.Member.User, newMeetingID)
+	log.Printf("%s: /watch ID %s", i.Member.User, newMeetingID)
 
 	if v, ok := opts["silent"]; ok && !v.BoolValue() {
 		sendSilently = v.BoolValue()
@@ -186,7 +186,7 @@ func stringifyParticipants(participants map[string]string) string {
 		builder.WriteString(name + "\n")
 	}
 	if builder.String() == "" {
-		builder.WriteString("This meeting appears to be empty")
+		builder.WriteString("Participants unknown")
 	}
 	return builder.String()
 }

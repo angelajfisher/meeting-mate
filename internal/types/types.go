@@ -1,7 +1,5 @@
 package types
 
-import "time"
-
 type EventData struct {
 	EventType       string
 	MeetingName     string
@@ -22,10 +20,3 @@ var (
 	MeetingData    = make(chan EventData, 5)
 	WatchMeetingID = make(chan string)
 )
-
-func CurrentTime() string {
-
-	format := "2006-01-02 15:04:05"
-	return time.Now().Format(format)
-
-}

@@ -57,7 +57,6 @@ type ObjectWrapper struct {
 }
 
 func handleWebhooks(w http.ResponseWriter, r *http.Request) {
-
 	reqBody, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Println(err)
@@ -74,7 +73,9 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 
 	var botData types.EventData
 
-	if eventData.Event == types.EndpointValidation {
+	switch {
+	case eventData.Event == types.EndpointValidation:
+		log.Println("Webhook received: URL validation request")
 
 		var payloadData URLValidation
 		err = json.Unmarshal(payload, &payloadData)
@@ -87,7 +88,8 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 
 		payloadData.EncryptedToken = hex.EncodeToString(hasher.Sum(nil))
 
-		retBody, err := json.Marshal(payloadData)
+		var retBody []byte
+		retBody, err = json.Marshal(payloadData)
 		if err != nil {
 			log.Println(err)
 			return
@@ -99,8 +101,8 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
-
-	} else if meetingID != "" {
+	case meetingID != "":
+		log.Println("Webhook received: Updating watched meeting")
 
 		var payloadData Meeting
 		err = json.Unmarshal(payload, &ObjectWrapper{&payloadData})
@@ -120,9 +122,8 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 		}
 
 		types.MeetingData <- botData
-
-	} else {
+	default:
+		log.Println("Webhook received: No watched meeting to update")
 		return
 	}
-
 }

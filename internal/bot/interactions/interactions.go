@@ -29,10 +29,10 @@ var InteractionList = []*discordgo.ApplicationCommand{
 
 type optionMap = map[string]*discordgo.ApplicationCommandInteractionDataOption
 
-func ParseOptions(options []*discordgo.ApplicationCommandInteractionDataOption) (om optionMap) {
-	om = make(optionMap)
+func ParseOptions(options []*discordgo.ApplicationCommandInteractionDataOption) optionMap {
+	om := make(optionMap)
 	for _, opt := range options {
 		om[opt.Name] = opt
 	}
-	return
+	return om
 }
