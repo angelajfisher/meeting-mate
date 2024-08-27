@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/angelajfisher/zoom-bot/internal/types"
+	"github.com/angelajfisher/meeting-mate/internal/types"
 )
 
 var (

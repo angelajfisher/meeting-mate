@@ -10,8 +10,8 @@
 
 # Test binary, built with `go test -c`
 *.test
-zoom-bot
-!zoom-bot/
+meeting-mate
+!meeting-mate/
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
@@ -30,3 +30,7 @@ tmp
 node_modules
 package-lock.json
 package.json
+
+# Editor files
+settings.json
+.golangci.yaml

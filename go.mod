@@ -1,4 +1,4 @@
-module github.com/angelajfisher/zoom-bot
+module github.com/angelajfisher/meeting-mate
 
 go 1.22
 

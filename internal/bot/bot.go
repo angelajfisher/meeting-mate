@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/angelajfisher/zoom-bot/internal/bot/interactions"
+	"github.com/angelajfisher/meeting-mate/internal/bot/interactions"
 	"github.com/bwmarrin/discordgo"
 )
 

@@ -9,8 +9,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/angelajfisher/zoom-bot/internal/bot"
-	"github.com/angelajfisher/zoom-bot/internal/server"
+	"github.com/angelajfisher/meeting-mate/internal/bot"
+	"github.com/angelajfisher/meeting-mate/internal/server"
 	"github.com/joho/godotenv"
 	"github.com/oklog/run"
 )
@@ -79,12 +79,12 @@ func validateEnv() (*bool, error) {
 	}
 
 	if *devMode {
-		fmt.Println("WARN: Initializing Zoom Bot in DEVELOPMENT mode")
+		fmt.Println("WARN: Initializing Meeting Mate in DEVELOPMENT mode")
 	} else if os.Getenv("SSL_CERT") == "" || os.Getenv("SSL_KEY") == "" {
 		return nil, errors.New("required SSL_CERT and/or SSL_KEY filepaths missing from environment")
 	}
 
-	server.BaseURL = "/projects/zoom-bot"
+	server.BaseURL = "/projects/meeting-mate"
 	server.StaticDir = *staticDir
 	server.Port = *webhookPort
 	server.Secret = os.Getenv("ZOOM_TOKEN")

@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/angelajfisher/zoom-bot/internal/types"
+	"github.com/angelajfisher/meeting-mate/internal/types"
 	"github.com/bwmarrin/discordgo"
 )
 

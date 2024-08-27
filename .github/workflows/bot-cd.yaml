@@ -2,20 +2,18 @@ name: Bot CD
 
 on:
   push:
-    branches: ['main']
-    paths:
-      - 'cmd/**'
-      - 'internal/**'
-      - 'go.mod'
-      - 'go.sum'
+    tags:
+      - "v*"
 
-# Cancel the workflow in progress if newer build is about to start.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
 jobs:
-  compile-binary:
+  compile-binary-and-release:
     runs-on: ubuntu-latest
     outputs:
       artifact-id: ${{ steps.artifact-upload.outputs.artifact-id }}
@@ -29,21 +27,26 @@ jobs:
           cache: false
       - name: Install dependencies
         run: go mod tidy
-      - name: Create directory for build output
-        run: mkdir tmp
       - name: Build app
-        run: GOOS=linux GOARCH=amd64 go build -v -o ./tmp ./cmd/zoom-bot
+        run: GOOS=linux GOARCH=amd64 go build -v -o ./meeting-mate ./cmd/meeting-mate
       - name: Upload build as artifact
         uses: actions/upload-artifact@v4
         id: artifact-upload
         with:
           name: app-artifact
-          path: 'tmp'
+          path: './meeting-mate'
           if-no-files-found: error
           retention-days: 1
+      - name: Create new release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./meeting-mate
+          fail_on_unmatched_files: true
+          make_latest: true
+          generate_release_notes: true
 
   notify-prod-server:
-    needs: compile-binary
+    needs: compile-binary-and-release
     runs-on: ubuntu-latest
     steps:
       - name: Invoke webhook

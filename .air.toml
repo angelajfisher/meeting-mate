@@ -7,7 +7,7 @@ tmp_dir = "tmp"
 
 [build]
 # Just plain old shell command. You could use `make` as well.
-cmd = "go build -o ./tmp/main ./cmd/zoom-bot"
+cmd = "go build -o ./tmp/main ./cmd/meeting-mate"
 # Binary file yields from `cmd`.
 bin = "tmp/main"
 # Customize binary, can setup environment variables when run your app.
@@ -45,7 +45,7 @@ kill_delay = 5000000000 # nanosecond
 # Rerun binary or not
 rerun = false
 # Delay after each executions
-rerun_delay = 500
+rerun_delay = 5000
 
 [log]
 # Show log time
