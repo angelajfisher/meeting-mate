@@ -17,6 +17,6 @@ const (
 )
 
 var (
-	MeetingData    = make(chan EventData, 5)
-	WatchMeetingID = make(chan string)
+	MeetingDataCh  = make(chan EventData, 5)
+	WatchMeetingCh = make(chan string)
 )

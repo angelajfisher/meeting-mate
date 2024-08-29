@@ -121,7 +121,7 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 			botData.ParticipantID = payloadData.Participant.UserID
 		}
 
-		types.MeetingData <- botData
+		types.MeetingDataCh <- botData
 	default:
 		log.Println("Webhook received: No watched meeting to update")
 		return

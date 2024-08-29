@@ -40,15 +40,15 @@ func Start(devMode bool) error {
 
 	go func() {
 		for {
-			meetingID = <-types.WatchMeetingID
+			meetingID = <-types.WatchMeetingCh
 
 			switch meetingID {
 			case types.Canceled:
 				meetingID = ""
-				types.MeetingData <- types.EventData{EventType: types.Canceled}
+				types.MeetingDataCh <- types.EventData{EventType: types.Canceled}
 			case types.Shutdown:
 				meetingID = ""
-				types.MeetingData <- types.EventData{EventType: types.Shutdown}
+				types.MeetingDataCh <- types.EventData{EventType: types.Shutdown}
 			}
 		}
 	}()
