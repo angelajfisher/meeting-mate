@@ -24,6 +24,9 @@ func Run() error {
 
 	session.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if i.Type != discordgo.InteractionApplicationCommand {
+			if i.Type == discordgo.InteractionMessageComponent {
+				interactions.HandleCancelSelection(s, i)
+			}
 			return
 		}
 
