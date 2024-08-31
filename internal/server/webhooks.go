@@ -9,7 +9,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/angelajfisher/meeting-mate/internal/types"
+	"github.com/angelajfisher/meeting-mate/internal/utils"
 )
 
 var Secret string
@@ -71,10 +71,9 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var botData types.EventData
+	var botData utils.EventData
 
-	switch {
-	case eventData.Event == types.EndpointValidation:
+	if eventData.Event == utils.ZoomEndpointValidation {
 		log.Println("Webhook received: URL validation request")
 
 		var payloadData URLValidation
@@ -101,8 +100,8 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
-	case meetingID != "":
-		log.Println("Webhook received: Updating watched meeting")
+	} else {
+		log.Println("Webhook received: Updating applicable watched meetings")
 
 		var payloadData Meeting
 		err = json.Unmarshal(payload, &ObjectWrapper{&payloadData})
@@ -110,20 +109,21 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 		}
 
-		if payloadData.ID != meetingID {
+		if !utils.MeetingWatches.ActiveMeeting(payloadData.ID) {
+			log.Println("no active meeting")
 			return
 		}
 
-		botData = types.EventData{EventType: eventData.Event, MeetingName: payloadData.Topic}
+		botData = utils.EventData{EventType: eventData.Event, MeetingName: payloadData.Topic}
 
-		if eventData.Event == types.ParticipantJoin || eventData.Event == types.ParticipantLeave {
+		if eventData.Event == utils.ZoomParticipantJoin || eventData.Event == utils.ZoomParticipantLeave {
 			botData.ParticipantName = payloadData.Participant.UserName
 			botData.ParticipantID = payloadData.Participant.UserID
 		}
 
-		types.MeetingDataCh <- botData
-	default:
-		log.Println("Webhook received: No watched meeting to update")
-		return
+		log.Println("active meeting")
+		for _, dataChannel := range utils.DataListeners[payloadData.ID] {
+			dataChannel <- botData
+		}
 	}
 }

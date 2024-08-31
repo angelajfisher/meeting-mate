@@ -8,15 +8,12 @@ import (
 	"os"
 	"path/filepath"
 	"time"
-
-	"github.com/angelajfisher/meeting-mate/internal/types"
 )
 
 var (
 	Port      string
 	BaseURL   string
 	StaticDir string
-	meetingID string
 	server    *http.Server
 )
 
@@ -37,21 +34,6 @@ func Start(devMode bool) error {
 		IdleTimeout:       30 * time.Second,
 		ReadHeaderTimeout: 2 * time.Second,
 	}
-
-	go func() {
-		for {
-			meetingID = <-types.WatchMeetingCh
-
-			switch meetingID {
-			case types.Canceled:
-				meetingID = ""
-				types.MeetingDataCh <- types.EventData{EventType: types.Canceled}
-			case types.Shutdown:
-				meetingID = ""
-				types.MeetingDataCh <- types.EventData{EventType: types.Shutdown}
-			}
-		}
-	}()
 
 	log.Println("Zoom webhook listener starting on", Port)
 
