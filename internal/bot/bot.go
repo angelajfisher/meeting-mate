@@ -36,6 +36,8 @@ func Run() error {
 			interactions.HandleWatch(s, i, interactions.ParseOptions(data.Options))
 		case "cancel":
 			interactions.HandleCancel(s, i, interactions.ParseOptions(data.Options))
+		case "status":
+			interactions.HandleStatus(s, i)
 		}
 	})
 
@@ -52,6 +54,11 @@ func Run() error {
 	if err != nil {
 		return fmt.Errorf("could not open bot session: %w", err)
 	}
+
+	if err = session.UpdateCustomStatus("Check the status of your watches with /status"); err != nil {
+		log.Printf("could not set custom status: %s", err)
+	}
+
 	return nil
 }
 

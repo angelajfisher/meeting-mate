@@ -31,6 +31,9 @@ var InteractionList = []*discordgo.ApplicationCommand{
 				Type:        discordgo.ApplicationCommandOptionString,
 			},
 		},
+	}, {
+		Name:        "status",
+		Description: "Check the status of your ongoing watch(es)",
 	},
 }
 
