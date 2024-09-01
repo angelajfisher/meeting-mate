@@ -23,7 +23,14 @@ var InteractionList = []*discordgo.ApplicationCommand{
 		},
 	}, {
 		Name:        "cancel",
-		Description: "Cancel the current meeting watch",
+		Description: "Cancel the watch on a meeting",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Name:        "meeting_id",
+				Description: "ID of the Zoom meeting",
+				Type:        discordgo.ApplicationCommandOptionString,
+			},
+		},
 	},
 }
 

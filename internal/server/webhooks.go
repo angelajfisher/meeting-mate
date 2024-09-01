@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -71,59 +72,69 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var botData utils.EventData
-
 	if eventData.Event == utils.ZoomEndpointValidation {
 		log.Println("Webhook received: URL validation request")
 
-		var payloadData URLValidation
-		err = json.Unmarshal(payload, &payloadData)
-		if err != nil {
-			log.Println(err)
-		}
-
-		hasher := hmac.New(sha256.New, []byte(Secret))
-		hasher.Write([]byte(payloadData.PlainToken))
-
-		payloadData.EncryptedToken = hex.EncodeToString(hasher.Sum(nil))
-
-		var retBody []byte
-		retBody, err = json.Marshal(payloadData)
+		var response []byte
+		response, err = validateEndpoint(payload)
 		if err != nil {
 			log.Println(err)
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		_, err = w.Write(retBody)
+		_, err = w.Write(response)
 		if err != nil {
 			log.Println(err)
 			return
 		}
-	} else {
-		log.Println("Webhook received: Updating applicable watched meetings")
 
-		var payloadData Meeting
-		err = json.Unmarshal(payload, &ObjectWrapper{&payloadData})
-		if err != nil {
-			log.Println(err)
-		}
-
-		if !utils.MeetingWatches.ActiveMeeting(payloadData.ID) {
-			log.Println("no active meeting")
-			return
-		}
-
-		botData = utils.EventData{EventType: eventData.Event, MeetingName: payloadData.Topic}
-
-		if eventData.Event == utils.ZoomParticipantJoin || eventData.Event == utils.ZoomParticipantLeave {
-			botData.ParticipantName = payloadData.Participant.UserName
-			botData.ParticipantID = payloadData.Participant.UserID
-		}
-
-		log.Println("active meeting")
-		for _, dataChannel := range utils.DataListeners[payloadData.ID] {
-			dataChannel <- botData
-		}
+		return
 	}
+
+	log.Println("Webhook received: Updating applicable watched meetings")
+
+	var botData utils.EventData
+
+	var payloadData Meeting
+	err = json.Unmarshal(payload, &ObjectWrapper{&payloadData})
+	if err != nil {
+		log.Println(err)
+	}
+
+	if !utils.MeetingWatches.ActiveMeeting(payloadData.ID) {
+		return
+	}
+
+	botData = utils.EventData{EventType: eventData.Event, MeetingName: payloadData.Topic}
+
+	if eventData.Event == utils.ZoomParticipantJoin || eventData.Event == utils.ZoomParticipantLeave {
+		botData.ParticipantName = payloadData.Participant.UserName
+		botData.ParticipantID = payloadData.Participant.UserID
+	}
+
+	for _, dataChannel := range utils.DataListeners[payloadData.ID] {
+		dataChannel <- botData
+	}
+}
+
+func validateEndpoint(payload json.RawMessage) ([]byte, error) {
+	var payloadData URLValidation
+	err := json.Unmarshal(payload, &payloadData)
+	if err != nil {
+		return []byte{}, fmt.Errorf("could not validate zoom endpoint: %w", err)
+	}
+
+	hasher := hmac.New(sha256.New, []byte(Secret))
+	hasher.Write([]byte(payloadData.PlainToken))
+
+	payloadData.EncryptedToken = hex.EncodeToString(hasher.Sum(nil))
+
+	var body []byte
+	body, err = json.Marshal(payloadData)
+	if err != nil {
+		return []byte{}, fmt.Errorf("could not validate zoom endpoint: %w", err)
+	}
+
+	return body, nil
 }

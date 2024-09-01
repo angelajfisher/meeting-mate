@@ -1,7 +1,5 @@
 package utils
 
-import "log"
-
 type bimap struct {
 	guildMeetings map[string]map[string]struct{} // map[guildID]map[meetingID] - the meetings being watched by a guild
 	meetingGuilds map[string]map[string]struct{} // map[meetingID]map[guildID] - the guilds watching a meeting
@@ -40,15 +38,13 @@ func (b *bimap) Remove(guildID string, meetingID string) {
 	// Remove from guildMeetings
 	if meetingList, exists := b.guildMeetings[guildID]; exists {
 		if _, present := meetingList[meetingID]; present {
-			log.Println("removing from meeting list")
 			delete(b.guildMeetings[guildID], meetingID)
 		}
 	}
 
 	// Remove from meetingGuilds
-	if guildList, exists := b.meetingGuilds[guildID]; exists {
+	if guildList, exists := b.meetingGuilds[meetingID]; exists {
 		if _, present := guildList[guildID]; present {
-			log.Println("removing from guild list")
 			delete(b.meetingGuilds[meetingID], guildID)
 		}
 	}
@@ -77,7 +73,6 @@ func (b *bimap) Exists(guildID string, meetingID string) bool {
 }
 
 func (b *bimap) ActiveMeeting(meetingID string) bool {
-	log.Println(b.meetingGuilds[meetingID])
 	if _, exists := b.meetingGuilds[meetingID]; exists && len(b.meetingGuilds[meetingID]) != 0 {
 		return true
 	}

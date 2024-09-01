@@ -63,12 +63,12 @@ func Stop() error {
 	fmt.Print("Bot shutting down...")
 
 	// Notify all active watchers of shutdown
-	for _, c := range interactions.Watchers {
-		c <- struct{}{}
+	for _, w := range interactions.Watches {
+		w.ShutdownNotice <- struct{}{}
 	}
 
 	// Give watchers time to stop
-	time.Sleep(1 * time.Second)
+	time.Sleep(time.Second)
 
 	err := session.Close()
 	if err != nil {
