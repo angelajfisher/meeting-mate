@@ -1,10 +1,9 @@
 <div align="center">
-
-# [Meeting Mate](https://www.angelajfisher.com/projects/meeting-mate)
+<h1><a src="https://www.angelajfisher.com/projects/meeting-mate">Meeting Mate</a></h1>
 
 Connect your Discord server with your Zoom meetings!
 
-![Running Go 1.22](https://img.shields.io/badge/Go-1.22-007d9c.svg?style=flat-square) ![Zoom API v1.0.0](https://img.shields.io/badge/Zoom%20API-v1.0.0-0B5CFF.svg?style=flat-square) ![Discord API v9](https://img.shields.io/badge/Discord%20API-v9-5865F2.svg?style=flat-square) ![Current release: beta v0.1](https://img.shields.io/badge/Release-v0.1-green.svg?style=flat-square) [![License](https://img.shields.io/badge/License-Apache_2.0-f69923.svg?style=flat-square)](https://opensource.org/licenses/Apache-2.0)
+![Running Go 1.22](https://img.shields.io/badge/Go-1.22-007d9c.svg?style=flat-square) [![Zoom API Events v1.0.0](https://img.shields.io/badge/Zoom%20API%20Events-v1.0.0-0B5CFF.svg?style=flat-square)](https://developers.zoom.us/docs/api/rest/reference/zoom-api/events/) [![Discord API v9](https://img.shields.io/badge/Discord%20API-v9-5865F2.svg?style=flat-square)](https://discord.com/developers/docs/reference#api-versioning) ![Current release: v1.0](https://img.shields.io/badge/Release-v1.0-green.svg?style=flat-square) [![License](https://img.shields.io/badge/License-Apache_2.0-f69923.svg?style=flat-square)](https://opensource.org/licenses/Apache-2.0)
 
 </div>
 
@@ -14,7 +13,26 @@ Meeting Mate is a lightweight Discord bot that connects teams together by syncin
 
 When the bot is active and commanded to watch a given Zoom meeting, it will post real-time updates to the Discord channel with the status of the meeting and the list of participants.
 
-<!-- todo: screenshot/gif of discord message -->
+<div align="center">
+<img src="docs/example-1.gif" width="50%"/>
+</div>
+
+<h2>Table of Contents</h2>
+
+- [Getting Started](#getting-started)
+  - [Requirements](#requirements)
+  - [Environment Variables](#environment-variables)
+    - [Required Variables](#required-variables)
+  - [Installation](#installation)
+    - [Installing from Source](#installing-from-source)
+  - [Usage](#usage)
+    - [Runtime Flags](#runtime-flags)
+- [How It Works](#how-it-works)
+  - [Zoom Webhook Listener](#zoom-webhook-listener)
+  - [Discord API Integration](#discord-api-integration)
+- [Development](#development)
+- [Contributing](#contributing)
+
 
 ## Getting Started
 
@@ -28,6 +46,8 @@ To set up your own working Meeting Mate, you must have the following in place be
 2. Admin access to the Zoom account hosting the meetings you wish to sync with Discord
 3. Ability to create a [webhook-only app](https://developers.zoom.us/docs/api/rest/webhook-only-app/) for the relevant Zoom account in the Zoom App Marketplace
 4. Ability to create a [Discord app](https://discord.com/developers/docs/quick-start/getting-started#step-1-creating-an-app) to provide the bot with credentials
+
+<div align="right"><a href="#table-of-contents">↑ Back to top ↑</a></div>
 
 ### Environment Variables
 
@@ -47,6 +67,8 @@ Meeting Mate requires some environment variables in order to function. Two optio
 When running in production, the following variables are also required:
 - `SSL_CERT`: The file path to your FQDN's SSL certificate
 - `SSL_KEY`: The file path to your FQDN's SSL key
+
+<div align="right"><a href="#table-of-contents">↑ Back to top ↑</a></div>
 
 ### Installation
 
@@ -74,15 +96,21 @@ Alternatively, you can run `go install ./cmd/meeting-mate` to build the binary d
 
 Once it's successfully compiled, run the binary with `./meeting-mate` if built or `meeting-mate` if installed and optionally add [flags](#runtime-flags).
 
+<div align="right"><a href="#table-of-contents">↑ Back to top ↑</a></div>
+
 ### Usage
 
 Meeting Mate has been designed with simplicity in mind for a smoother, more reliable operation. Simply add the bot to your Discord server, then begin watching a Zoom meeting with the command `/watch meeting_ID: <your Zoom meeting ID>` in your channel of choice. The bot will take care of the rest! Until it receives the `/cancel` command, it will continuously listen to Zoom webhooks and provide real-time status updates in Discord for the requested meeting.
+
+<div align="right"><a href="#table-of-contents">↑ Back to top ↑</a></div>
 
 #### Runtime Flags
 
 - `--dev`: Runs the program in development mode, which disables TLS and prevents validation of webhook data source
 - `--envFile`: Provides the program with the path of a `.env` file to source environment variables from -- overrides build time values
 - `--webhookPort`: Port at which the webhook listener will listen for incoming Zoom correspondence
+
+<div align="right"><a href="#table-of-contents">↑ Back to top ↑</a></div>
 
 ## How It Works
 
@@ -96,6 +124,8 @@ When a meeting watch is active, the server will take incoming meeting data and s
 
 The Zoom API documentation for meeting webhooks can be referenced [here](https://developers.zoom.us/docs/api/rest/reference/zoom-api/events/).
 
+<div align="right"><a href="#table-of-contents">↑ Back to top ↑</a></div>
+
 ### Discord API Integration
 
 Integration with the Discord API is achieved thanks to the [discordgo package](https://github.com/bwmarrin/discordgo).
@@ -106,6 +136,8 @@ When a meeting watch is in progress, the bot will create a new message in the Di
 
 If the program shuts down or a user instructs the bot to cancel the watch, any in-progress meeting messages are updated to notify users of their interruption.
 
+<div align="right"><a href="#table-of-contents">↑ Back to top ↑</a></div>
+
 ## Development
 
 For ease of development, [Docker](https://www.docker.com/) is the recommended way to run a development build of Meeting Mate. The Docker setup includes Air, which will automatically recompile and run the binary upon changes to the code.
@@ -114,8 +146,12 @@ To run the development build with Docker, simply run `docker compose up` from wi
 
 If you do not wish to use Docker, see the instructions for [building from source](#installing-from-source) and run the binary with the `--dev` [flag](#runtime-flags).
 
+<div align="right"><a href="#table-of-contents">↑ Back to top ↑</a></div>
+
 ## Contributing
 
 Thank you so much for your interest in contributing to Meeting Mate! At this time, I am not open to outside code contributions; however, feedback is welcomed and very much appreciated.
 
-If you discover a bug, wish for a new feature, or have other ideas for ways Meeting Mate could grow to better serve your community, please let me know by opening a detailed issue so I can take a look. Thanks again!
+If you discover a bug, wish for a new feature, or have other ideas for ways Meeting Mate could grow to better serve your community, please let me know by opening a detailed issue so I can take a look.
+
+<div align="right"><a href="#table-of-contents">↑ Back to top ↑</a></div>

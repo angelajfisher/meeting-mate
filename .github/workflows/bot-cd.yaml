@@ -54,4 +54,4 @@ jobs:
         env:
           webhook_url: ${{ secrets.BOT_WEBHOOK_URL }}
           webhook_secret: ${{ secrets.WEBHOOK_SECRET }}
-          data: '{"artifact-id": "${{ needs.compile-binary.outputs.artifact-id }}"}'
+          data: '{"artifact-id": "${{ needs.compile-binary-and-release.outputs.artifact-id }}"}'
