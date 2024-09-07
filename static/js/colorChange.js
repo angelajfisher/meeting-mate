@@ -1,18 +1,28 @@
 /* Made by Tailwind Toolbox for the Landing Page template:
 https://github.com/tailwindtoolbox/Landing-Page */
 
-let scrollpos = window.scrollY;
 const header = document.getElementById("header");
 const navcontent = document.getElementById("nav-content");
 const navaction = document.getElementById("navAction");
-const brandname = document.getElementById("brandname");
 const toToggle = document.querySelectorAll(".toggleColour");
+const logo = document.getElementById("robologo");
+let prevScrollPos = -1;
 
+// Apply classes for slide in bar
 document.addEventListener("scroll", () => {
-	/*Apply classes for slide in bar*/
-	scrollpos = window.scrollY;
+	const scrollpos = window.scrollY;
+
+	// Only make changes if scroll position has changed enough
+	if (
+		(scrollpos > 10 && prevScrollPos > 10) ||
+		(scrollpos <= 10 && prevScrollPos <= 10)
+	) {
+		prevScrollPos = scrollpos;
+		return;
+	}
 
 	if (scrollpos > 10) {
+		logo.setAttribute("src", "static/images/robot-outline-black.svg");
 		header.classList.add("bg-white");
 		navaction.classList.remove("bg-white");
 		navaction.classList.add("gradient");
@@ -27,6 +37,7 @@ document.addEventListener("scroll", () => {
 		navcontent.classList.remove("bg-gray-100");
 		navcontent.classList.add("bg-white");
 	} else {
+		logo.setAttribute("src", "static/images/robot-outline-white.svg");
 		header.classList.remove("bg-white");
 		navaction.classList.remove("gradient");
 		navaction.classList.add("bg-white");
@@ -37,9 +48,9 @@ document.addEventListener("scroll", () => {
 			toToggle[i].classList.add("text-white");
 			toToggle[i].classList.remove("text-gray-800");
 		}
-
 		header.classList.remove("shadow");
 		navcontent.classList.remove("bg-white");
 		navcontent.classList.add("bg-gray-100");
 	}
+	prevScrollPos = scrollpos;
 });

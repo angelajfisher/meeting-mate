@@ -15,11 +15,6 @@
       href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700"
       rel="stylesheet"
     />
-    <style>
-      .gradient {
-        background: linear-gradient(90deg, #2d8cff 0%, #5865f2 100%);
-      }
-    </style>
   </head>
   <body
     class="leading-normal tracking-normal text-white gradient"
@@ -31,14 +26,15 @@
         class="w-full container mx-auto flex flex-wrap items-center justify-between mt-0 py-2"
       >
         <div class="pl-4 flex items-center">
+          <img
+          id="robologo"
+              class="h-6 lg:h-8 pr-1 inline self-center"
+              src="static/images/robot-outline-white.svg"
+            />
           <a
             class="toggleColour text-white no-underline hover:no-underline font-bold text-2xl lg:text-4xl"
             href="#"
           >
-            <img
-              class="h-8 fill-current inline"
-              src="static/images/robot-3-line.svg"
-            />
             MEETING MATE
           </a>
         </div>
@@ -48,9 +44,10 @@
             class="flex items-center p-1 text-white-800 hover:text-gray-900 focus:outline-none focus:shadow-outline transform transition hover:scale-105 duration-300 ease-in-out"
           >
             <svg
-              class="fill-current h-6 w-6"
+              class="h-6 w-6"
               viewBox="0 0 20 20"
               xmlns="http://www.w3.org/2000/svg"
+              fill="#fff"
             >
               <title>Menu</title>
               <path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z" />
@@ -61,34 +58,29 @@
           class="w-full flex-grow lg:flex lg:items-center lg:w-auto hidden mt-2 lg:mt-0 bg-white lg:bg-transparent text-black p-4 lg:p-0 z-20"
           id="nav-content"
         >
-          <ul class="list-reset lg:flex justify-end flex-1 items-center">
-            <li class="mr-3">
+          <ul class="list-reset flex justify-end flex-1 items-center">
+            <!-- <li class="mr-3">
               <a
-                class="inline-block py-2 px-4 text-black font-bold no-underline"
-                href="#"
-                >Active</a
+                class="toggleColour inline-block py-2 px-4 text-white font-bold no-underline"
+                href="/projects/meeting-mate/docs"
+                >Documentation</a
               >
-            </li>
+            </li> -->
             <li class="mr-3">
               <a
-                class="inline-block text-black no-underline hover:text-gray-800 hover:text-underline py-2 px-4"
-                href="#"
-                >link</a
-              >
-            </li>
-            <li class="mr-3">
-              <a
-                class="inline-block text-black no-underline hover:text-gray-800 hover:text-underline py-2 px-4"
-                href="#"
-                >link</a
+                class="toggleColour inline-block text-white no-underline hover:text-gray-800 hover:text-underline py-2 px-4"
+                href="https://github.com/angelajfisher/meeting-mate"
+                >Source</a
               >
             </li>
           </ul>
           <button
             id="navAction"
             class="mx-auto lg:mx-0 hover:underline bg-white text-gray-800 font-bold rounded-full mt-4 lg:mt-0 py-4 px-8 shadow opacity-75 focus:outline-none focus:shadow-outline transform transition hover:scale-105 duration-300 ease-in-out"
+            type="button"
+            onclick="location.href='https://github.com/angelajfisher/meeting-mate#getting-started'"
           >
-            Action
+            Download
           </button>
         </div>
       </div>
@@ -101,25 +93,32 @@
       >
         <!--Left Col-->
         <div
-          class="flex flex-col w-full md:w-2/5 justify-center items-start text-center md:text-left"
+          class="md:pl-10 flex flex-col w-full md:w-2/5 justify-center items-start text-center md:text-left"
         >
-          <p class="uppercase tracking-loose w-full">Link Zoom Meetings to Discord</p>
+          <p class="uppercase tracking-loose w-full">
+            Connect Teams Across Platforms
+          </p>
           <h1 class="my-4 text-5xl font-bold leading-tight">
-            Seamless Connections between Sync and Async Platforms
+            Sharing Zoom Meetings in Discord Made Easy
           </h1>
           <p class="leading-normal text-2xl mb-8">
-            Link Meeting Mate to your Discord servers to see who's on and keep
-            the party going!
+            Add Meeting Mate to your Discord servers to see when the team is
+            getting together!
           </p>
           <button
             class="mx-auto lg:mx-0 hover:underline bg-white text-gray-800 font-bold rounded-full my-6 py-4 px-8 shadow-lg focus:outline-none focus:shadow-outline transform transition hover:scale-105 duration-300 ease-in-out"
+            type="button"
+            onclick="location.href='https://github.com/angelajfisher/meeting-mate#getting-started'"
           >
             Get Started
           </button>
         </div>
         <!--Right Col-->
-        <div class="w-full md:w-3/5 py-6 text-center">
-          <img class="w-full md:w-4/5 z-50" src="static/images/hero.png" />
+        <div class="w-full md:w-3/5 md:pl-8 md:pt-16 md:self-start lg:pl-0 lg:pt-6 xl:pt-0 xl:self-auto py-6 flex justify-center">
+          <img
+            class="w-full lg:w-4/5 xl:w-3/5"
+            src="static/images/undraw_real_time_collaboration.svg"
+          />
         </div>
       </div>
     </div>
@@ -138,28 +137,22 @@
             class="h-1 mx-auto gradient w-64 opacity-25 my-0 py-0 rounded-t"
           ></div>
         </div>
+        <br />
         <div class="flex flex-wrap">
           <div class="w-5/6 sm:w-1/2 p-6">
             <h3 class="text-3xl text-gray-800 font-bold leading-none mb-3">
-              Lorem ipsum dolor sit amet
+              Zoom Data is Captured
             </h3>
+            <br />
             <p class="text-gray-600 mb-8">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam
-              at ipsum eu nunc commodo posuere et sit amet ligula.
-              <br />
-              <br />
-
-              Images from:
-
-              <a class="text-pink-500 underline" href="https://undraw.co/"
-                >undraw.co</a
-              >
+              Using a custom account-level webhook app on the Zoom marketplace,
+              meeting data is captured and processed as real-time changes occur.
             </p>
           </div>
           <div class="w-full sm:w-1/2 p-6">
             <img
               class="w-full sm:h-64 mx-auto"
-              src="static/images/travel-booking.svg"
+              src="static/images/undraw_remote_meeting.svg"
             />
           </div>
         </div>
@@ -167,24 +160,20 @@
           <div class="w-full sm:w-1/2 p-6 mt-6">
             <img
               class="w-5/6 sm:h-64 mx-auto"
-              src="static/images/connected-world.svg"
+              src="static/images/undraw_real_time_sync.svg"
             />
           </div>
           <div class="w-full sm:w-1/2 p-6 mt-6">
             <div class="align-middle">
               <h3 class="text-3xl text-gray-800 font-bold leading-none mb-3">
-                Lorem ipsum dolor sit amet
+                Updates are Shared with Discord
               </h3>
+              <br />
               <p class="text-gray-600 mb-8">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam
-                at ipsum eu nunc commodo posuere et sit amet ligula.
-                <br />
-                <br />
-                Images from:
-
-                <a class="text-pink-500 underline" href="https://undraw.co/"
-                  >undraw.co</a
-                >
+                When a Discord user initiates a "watch" on a meeting, any
+                incoming Zoom data for that meeting is processed and shared with
+                the Discord server in the form of an updating meeting status
+                message.
               </p>
             </div>
           </div>
@@ -196,27 +185,28 @@
         <h2
           class="w-full my-2 text-5xl font-bold leading-tight text-center text-gray-800"
         >
-          Title
+          Learn More
         </h2>
         <div class="w-full mb-4">
           <div
             class="h-1 mx-auto gradient w-64 opacity-25 my-0 py-0 rounded-t"
           ></div>
         </div>
+        <br />
         <div class="w-full md:w-1/3 p-6 flex flex-col flex-grow flex-shrink">
           <div
             class="flex-1 bg-white rounded-t rounded-b-none overflow-hidden shadow"
           >
             <a href="#" class="flex flex-wrap no-underline hover:no-underline">
               <p class="w-full text-gray-600 text-xs md:text-sm px-6">
-                xGETTING STARTED
+                DOCUMENTATION
               </p>
               <div class="w-full font-bold text-xl text-gray-800 px-6">
-                Lorem ipsum dolor sit amet.
+                Learn the Inner Workings
               </div>
               <p class="text-gray-800 text-base px-6 mb-5">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam
-                at ipsum eu nunc commodo posuere et sit amet ligula.
+                Check out the Meeting Mate documentation to learn more about how
+                it works, using it for your own Zoom meetings, and more!
               </p>
             </a>
           </div>
@@ -225,9 +215,10 @@
           >
             <div class="flex items-center justify-start">
               <button
-                class="mx-auto lg:mx-0 hover:underline gradient text-white font-bold rounded-full my-6 py-4 px-8 shadow-lg focus:outline-none focus:shadow-outline transform transition hover:scale-105 duration-300 ease-in-out"
+                class="mx-auto lg:mx-0 text-white font-bold rounded-full my-6 py-4 px-8 shadow-lg bg-slate-700"
+                disabled
               >
-                Action
+                Coming Soon
               </button>
             </div>
           </div>
@@ -237,15 +228,14 @@
             class="flex-1 bg-white rounded-t rounded-b-none overflow-hidden shadow"
           >
             <a href="#" class="flex flex-wrap no-underline hover:no-underline">
-              <p class="w-full text-gray-600 text-xs md:text-sm px-6">
-                xGETTING STARTED
-              </p>
+              <p class="w-full text-gray-600 text-xs md:text-sm px-6">DEMO</p>
               <div class="w-full font-bold text-xl text-gray-800 px-6">
-                Lorem ipsum dolor sit amet.
+                See Meeting Mate in Action
               </div>
               <p class="text-gray-800 text-base px-6 mb-5">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam
-                at ipsum eu nunc commodo posuere et sit amet ligula.
+                Pictures are worth a thousand words — how many are videos worth?
+                Take a look at this walk-through of a Meeting Mate demo and let
+                me know :)
               </p>
             </a>
           </div>
@@ -254,9 +244,10 @@
           >
             <div class="flex items-center justify-center">
               <button
-                class="mx-auto lg:mx-0 hover:underline gradient text-white font-bold rounded-full my-6 py-4 px-8 shadow-lg focus:outline-none focus:shadow-outline transform transition hover:scale-105 duration-300 ease-in-out"
+                class="mx-auto lg:mx-0 text-white font-bold rounded-full my-6 py-4 px-8 shadow-lg bg-slate-700"
+                disabled
               >
-                Action
+                Coming Soon
               </button>
             </div>
           </div>
@@ -267,14 +258,15 @@
           >
             <a href="#" class="flex flex-wrap no-underline hover:no-underline">
               <p class="w-full text-gray-600 text-xs md:text-sm px-6">
-                xGETTING STARTED
+                OPEN SOURCE
               </p>
               <div class="w-full font-bold text-xl text-gray-800 px-6">
-                Lorem ipsum dolor sit amet.
+                Comb Through the Code
               </div>
               <p class="text-gray-800 text-base px-6 mb-5">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam
-                at ipsum eu nunc commodo posuere et sit amet ligula.
+                Want to understand the nitty gritty of Meeting Mate? There's no
+                better way than to read the source code itself! Available on
+                both GitHub and GitLab.
               </p>
             </a>
           </div>
@@ -284,8 +276,10 @@
             <div class="flex items-center justify-end">
               <button
                 class="mx-auto lg:mx-0 hover:underline gradient text-white font-bold rounded-full my-6 py-4 px-8 shadow-lg focus:outline-none focus:shadow-outline transform transition hover:scale-105 duration-300 ease-in-out"
+                type="button"
+                onclick="location.href='https://github.com/angelajfisher/meeting-mate'"
               >
-                Action
+                View on GitHub
               </button>
             </div>
           </div>
@@ -307,6 +301,8 @@
       <h3 class="my-4 text-3xl leading-tight">Setup is as easy as 1, 2, 3!</h3>
       <button
         class="mx-auto lg:mx-0 hover:underline bg-white text-gray-800 font-bold rounded-full my-6 py-4 px-8 shadow-lg focus:outline-none focus:shadow-outline transform transition hover:scale-105 duration-300 ease-in-out"
+        type="button"
+        onclick="location.href='https://github.com/angelajfisher/meeting-mate#getting-started'"
       >
         Let's Go!
       </button>
@@ -314,123 +310,22 @@
     <!--Footer-->
     <footer class="bg-white">
       <div class="container mx-auto px-8">
-        <div class="w-full flex flex-col md:flex-row py-6">
-          <div class="flex-1 mb-6 text-black">
+        <div class="w-full flex flex-row py-6 items-center">
+          <div class="flex flex-1 items-center text-black">
+            <img
+                class="h-4 lg:h-6 pr-1 inline"
+                src="static/images/robot-outline-black.svg"
+              />
             <a
               class="text-black-600 no-underline hover:no-underline font-bold lg:text-2xl"
               href="#"
             >
-              <img
-                class="h-8 fill-current inline"
-                src="static/images/robot-3-line.svg"
-              />
               MEETING MATE
             </a>
           </div>
-          <div class="flex-1">
-            <p class="uppercase text-gray-500 md:mb-6">Links</p>
-            <ul class="list-reset mb-6">
-              <li class="mt-2 inline-block mr-2 md:block md:mr-0">
-                <a
-                  href="#"
-                  class="no-underline hover:underline text-gray-800 hover:text-pink-500"
-                  >FAQ</a
-                >
-              </li>
-              <li class="mt-2 inline-block mr-2 md:block md:mr-0">
-                <a
-                  href="#"
-                  class="no-underline hover:underline text-gray-800 hover:text-pink-500"
-                  >Help</a
-                >
-              </li>
-              <li class="mt-2 inline-block mr-2 md:block md:mr-0">
-                <a
-                  href="#"
-                  class="no-underline hover:underline text-gray-800 hover:text-pink-500"
-                  >Support</a
-                >
-              </li>
-            </ul>
-          </div>
-          <div class="flex-1">
-            <p class="uppercase text-gray-500 md:mb-6">Legal</p>
-            <ul class="list-reset mb-6">
-              <li class="mt-2 inline-block mr-2 md:block md:mr-0">
-                <a
-                  href="#"
-                  class="no-underline hover:underline text-gray-800 hover:text-pink-500"
-                  >Terms</a
-                >
-              </li>
-              <li class="mt-2 inline-block mr-2 md:block md:mr-0">
-                <a
-                  href="#"
-                  class="no-underline hover:underline text-gray-800 hover:text-pink-500"
-                  >Privacy</a
-                >
-              </li>
-            </ul>
-          </div>
-          <div class="flex-1">
-            <p class="uppercase text-gray-500 md:mb-6">Social</p>
-            <ul class="list-reset mb-6">
-              <li class="mt-2 inline-block mr-2 md:block md:mr-0">
-                <a
-                  href="#"
-                  class="no-underline hover:underline text-gray-800 hover:text-pink-500"
-                  >Facebook</a
-                >
-              </li>
-              <li class="mt-2 inline-block mr-2 md:block md:mr-0">
-                <a
-                  href="#"
-                  class="no-underline hover:underline text-gray-800 hover:text-pink-500"
-                  >Linkedin</a
-                >
-              </li>
-              <li class="mt-2 inline-block mr-2 md:block md:mr-0">
-                <a
-                  href="#"
-                  class="no-underline hover:underline text-gray-800 hover:text-pink-500"
-                  >Twitter</a
-                >
-              </li>
-            </ul>
-          </div>
-          <div class="flex-1">
-            <p class="uppercase text-gray-500 md:mb-6">Company</p>
-            <ul class="list-reset mb-6">
-              <li class="mt-2 inline-block mr-2 md:block md:mr-0">
-                <a
-                  href="#"
-                  class="no-underline hover:underline text-gray-800 hover:text-pink-500"
-                  >Official Blog</a
-                >
-              </li>
-              <li class="mt-2 inline-block mr-2 md:block md:mr-0">
-                <a
-                  href="#"
-                  class="no-underline hover:underline text-gray-800 hover:text-pink-500"
-                  >About Us</a
-                >
-              </li>
-              <li class="mt-2 inline-block mr-2 md:block md:mr-0">
-                <a
-                  href="#"
-                  class="no-underline hover:underline text-gray-800 hover:text-pink-500"
-                  >Contact</a
-                >
-              </li>
-            </ul>
-          </div>
+          <div class="flex-1 flex flex-col sm:flex-row justify-end text-black"><span>Lovingly crafted&nbsp;</span><span></span>by Angela Fisher 2024</span></div>
         </div>
       </div>
-      <a
-        href="https://www.freepik.com/free-photos-vectors/background"
-        class="text-gray-500"
-        >Background vector created by freepik - www.freepik.com</a
-      >
     </footer>
   </body>
 </html>
