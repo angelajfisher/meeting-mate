@@ -97,7 +97,7 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 func (w *watchProcess) listen() {
 	var err error
 
-	for zoomData := range utils.ReceiveZoomData(w.MeetingID, w.GuildID) {
+	for zoomData := range utils.DataListeners.AddListener(w.MeetingID, w.GuildID) {
 		if zoomData.EventType == utils.WatchCanceled {
 			w.meetingMsgContent.Embeds[0].Description = "**Status Unknown**\nThe watch on this meeting was canceled."
 			utils.MeetingWatches.Remove(w.GuildID, w.MeetingID)

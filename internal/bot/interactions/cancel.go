@@ -32,7 +32,8 @@ func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, opts opt
 		)
 
 		if utils.MeetingWatches.Exists(i.GuildID, meetingID) {
-			cancel(meetingID, i.GuildID)
+			utils.DataListeners.RemoveListener(i.GuildID, meetingID, utils.EventData{EventType: utils.WatchCanceled})
+			utils.MeetingWatches.Remove(i.GuildID, meetingID)
 			response = "Canceled watch on meeting ID `" + meetingID + "`."
 		} else {
 			response = noWatch
@@ -106,7 +107,7 @@ func HandleCancelSelection(s *discordgo.Session, i *discordgo.InteractionCreate)
 
 	var responseMsg string
 	if len(data.Values) == 1 {
-		for _, dataChannel := range utils.DataListeners[data.Values[0]] {
+		for _, dataChannel := range utils.DataListeners.GetMeetingListeners(data.Values[0]) {
 			dataChannel <- utils.EventData{EventType: utils.WatchCanceled}
 		}
 		responseMsg = "Canceled watch on meeting ID `" + data.Values[0] + "`."
@@ -114,7 +115,8 @@ func HandleCancelSelection(s *discordgo.Session, i *discordgo.InteractionCreate)
 		builder := new(strings.Builder)
 		builder.WriteString("Canceled watch on the following meetings:")
 		for _, meetingID := range data.Values {
-			cancel(meetingID, i.GuildID)
+			utils.DataListeners.RemoveListener(i.GuildID, meetingID, utils.EventData{EventType: utils.WatchCanceled})
+			utils.MeetingWatches.Remove(i.GuildID, meetingID)
 			builder.WriteString("\n- `" + meetingID + "`")
 		}
 		responseMsg = builder.String()
@@ -129,11 +131,4 @@ func HandleCancelSelection(s *discordgo.Session, i *discordgo.InteractionCreate)
 	if err != nil {
 		log.Printf("could not respond to interaction: %s", err)
 	}
-}
-
-func cancel(meetingID string, guildID string) {
-	utils.DataListeners[meetingID][guildID] <- utils.EventData{EventType: utils.WatchCanceled}
-	close(utils.DataListeners[meetingID][guildID])
-	delete(utils.DataListeners[meetingID], guildID)
-	utils.MeetingWatches.Remove(guildID, meetingID)
 }

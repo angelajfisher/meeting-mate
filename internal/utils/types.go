@@ -20,4 +20,5 @@ var (
 	// Bidirectional map tracking ongoing watches categorized by meetingID and by guildID
 	MeetingWatches  = newBimap()
 	UpdateMeetingID chan struct{ string bool }
+	DataListeners   = NewDataListeners()
 )

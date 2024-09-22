@@ -113,7 +113,7 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 		botData.ParticipantID = payloadData.Participant.UserID
 	}
 
-	for _, dataChannel := range utils.DataListeners[payloadData.ID] {
+	for _, dataChannel := range utils.DataListeners.GetMeetingListeners(payloadData.ID) {
 		dataChannel <- botData
 	}
 }
