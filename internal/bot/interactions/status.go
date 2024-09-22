@@ -4,13 +4,13 @@ import (
 	"log"
 	"strings"
 
-	"github.com/angelajfisher/meeting-mate/internal/utils"
+	"github.com/angelajfisher/meeting-mate/internal/types"
 	"github.com/bwmarrin/discordgo"
 )
 
 func HandleStatus(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var (
-		activeWatches = utils.MeetingWatches.GetMeetings(i.GuildID)
+		activeWatches = types.MeetingWatches.GetMeetings(i.GuildID)
 		response      string
 	)
 

@@ -2,9 +2,8 @@ package interactions
 
 import (
 	"log"
-	"strings"
 
-	"github.com/angelajfisher/meeting-mate/internal/utils"
+	"github.com/angelajfisher/meeting-mate/internal/types"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -14,12 +13,11 @@ var (
 
 type watchProcess struct {
 	ShutdownNotice    chan struct{}
-	MeetingID         string                 // The ID of the Zoom meeting being watched
+	Meeting           *types.Meeting         // The Zoom meeting being watched
 	GuildID           string                 // The ID of the Discord guild this watch is for
 	channelID         string                 // The ID of the channel this watch is for
 	session           *discordgo.Session     // The active Discord session used for communication
 	silent            bool                   // Whether messages should be sent with the @silent flag
-	participantsList  map[string]string      // map[participantID]participantName
 	meetingInProgress bool                   // Whether the meeting is currently ongoing
 	meetingMsgContent *discordgo.MessageSend // The data the message should contain
 	meetingStatusMsg  *discordgo.Message     // The message sent by the bot
@@ -39,7 +37,7 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 	log.Printf("%s: /watch ID %s", i.Member.User, newMeetingID)
 
 	// Check if the meeting ID is currently being watched
-	if utils.MeetingWatches.Exists(i.GuildID, newMeetingID) {
+	if types.MeetingWatches.Exists(i.GuildID, newMeetingID) {
 		responseMsg.msg = "Watch on meeting ID `" + newMeetingID +
 			"` is already ongoing. It will continue indefinitely unless `/cancel`ed."
 		responseMsg.flags = discordgo.MessageFlagsEphemeral
@@ -51,7 +49,7 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 	}
 
 	if !responseMsg.terminate {
-		utils.MeetingWatches.Add(i.GuildID, newMeetingID)
+		types.MeetingWatches.Add(i.GuildID, newMeetingID)
 		responseMsg.msg = "Initiating watch on meeting ID `" + newMeetingID + "`!\nStop at any time with `/cancel`"
 	}
 
@@ -75,13 +73,12 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 		sendSilently = v.BoolValue()
 	}
 	watch := watchProcess{
-		ShutdownNotice:    make(chan struct{}),
-		MeetingID:         newMeetingID,
+		ShutdownNotice:    make(chan struct{}, 1),
+		Meeting:           types.AllMeetings.NewMeeting(newMeetingID),
 		GuildID:           i.GuildID,
 		session:           s,
 		channelID:         i.ChannelID,
 		silent:            sendSilently,
-		participantsList:  make(map[string]string),
 		meetingInProgress: false,
 		meetingMsgContent: &discordgo.MessageSend{Embeds: []*discordgo.MessageEmbed{{Type: discordgo.EmbedTypeRich,
 			Description: "Loading..."}}},
@@ -97,14 +94,15 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 func (w *watchProcess) listen() {
 	var err error
 
-	for zoomData := range utils.ReceiveZoomData(w.MeetingID, w.GuildID) {
-		if zoomData.EventType == utils.WatchCanceled {
+	meetingID := w.Meeting.GetID()
+	for zoomData := range types.DataListeners.Add(w.GuildID, meetingID) {
+		if zoomData.EventType == types.WatchCanceled {
 			w.meetingMsgContent.Embeds[0].Description = "**Status Unknown**\nThe watch on this meeting was canceled."
-			utils.MeetingWatches.Remove(w.GuildID, w.MeetingID)
+			types.MeetingWatches.Remove(w.GuildID, meetingID)
 			break
-		} else if zoomData.EventType == utils.BotShutdown {
+		} else if zoomData.EventType == types.BotShutdown {
 			w.meetingMsgContent.Embeds[0].Description = "**Status Unknown**\nThe watch stopped due to bot shutdown." +
-				" Please restart with `/watch " + w.MeetingID + "` when available."
+				" Please restart with `/watch " + meetingID + "` when available."
 			break
 		}
 
@@ -118,7 +116,7 @@ func (w *watchProcess) listen() {
 		// If there wasn't a meeting in progress before this data came in, start a new meeting message
 		if !w.meetingInProgress {
 			w.meetingInProgress = true
-			w.meetingMsgContent.Embeds[0].Title = zoomData.MeetingName
+			w.meetingMsgContent.Embeds[0].Title = w.Meeting.Name(zoomData.MeetingName)
 			w.meetingMsgContent.Embeds[0].Description = "This meeting is in progress."
 			w.meetingMsgContent.Embeds[0].Fields = []*discordgo.MessageEmbedField{{Name: "Current Participants"}}
 		}
@@ -140,20 +138,20 @@ func (w *watchProcess) listen() {
 	}
 }
 
-func (w *watchProcess) updateMeetingMsg(zoomData utils.EventData) {
+func (w *watchProcess) updateMeetingMsg(zoomData types.EventData) {
 	var err error
 
 	switch zoomData.EventType {
-	case utils.ZoomParticipantJoin:
-		w.participantsList[zoomData.ParticipantID] = zoomData.ParticipantName
-		w.meetingMsgContent.Embeds[0].Fields[0].Value = w.stringifyParticipants()
+	case types.ZoomParticipantJoin:
+		w.Meeting.Participants.Add(zoomData.ParticipantID, zoomData.ParticipantName)
+		w.meetingMsgContent.Embeds[0].Fields[0].Value = w.Meeting.Participants.Stringify()
 
-	case utils.ZoomParticipantLeave:
-		delete(w.participantsList, zoomData.ParticipantID)
-		w.meetingMsgContent.Embeds[0].Fields[0].Value = w.stringifyParticipants()
+	case types.ZoomParticipantLeave:
+		w.Meeting.Participants.Remove(zoomData.ParticipantID)
+		w.meetingMsgContent.Embeds[0].Fields[0].Value = w.Meeting.Participants.Stringify()
 
-	case utils.ZoomMeetingEnd:
-		clear(w.participantsList)
+	case types.ZoomMeetingEnd:
+		w.Meeting.Participants.Empty()
 		w.meetingMsgContent.Embeds[0].Description = "This meeting ended."
 		w.meetingMsgContent.Embeds[0].Fields = nil
 		w.meetingInProgress = false
@@ -175,15 +173,4 @@ func (w *watchProcess) updateMeetingMsg(zoomData utils.EventData) {
 	} else {
 		log.Println("could not update meeting status: meeting message is nil")
 	}
-}
-
-func (w *watchProcess) stringifyParticipants() string {
-	builder := new(strings.Builder)
-	for _, name := range w.participantsList {
-		builder.WriteString(name + "\n")
-	}
-	if builder.String() == "" {
-		builder.WriteString("Unknown")
-	}
-	return builder.String()
 }

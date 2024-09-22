@@ -1,8 +1,11 @@
-package utils
+package types
+
+import "sync"
 
 type bimap struct {
 	guildMeetings map[string]map[string]struct{} // map[guildID]map[meetingID] - the meetings being watched by a guild
 	meetingGuilds map[string]map[string]struct{} // map[meetingID]map[guildID] - the guilds watching a meeting
+	mu            sync.RWMutex
 }
 
 func newBimap() *bimap {
@@ -13,6 +16,9 @@ func newBimap() *bimap {
 }
 
 func (b *bimap) Add(guildID string, meetingID string) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
 	// Add to guildMeetings
 	if meetingList, exists := b.guildMeetings[guildID]; exists {
 		if _, present := meetingList[meetingID]; !present {
@@ -35,6 +41,9 @@ func (b *bimap) Add(guildID string, meetingID string) {
 }
 
 func (b *bimap) Remove(guildID string, meetingID string) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
 	// Remove from guildMeetings
 	if meetingList, exists := b.guildMeetings[guildID]; exists {
 		if _, present := meetingList[meetingID]; present {
@@ -51,6 +60,9 @@ func (b *bimap) Remove(guildID string, meetingID string) {
 }
 
 func (b *bimap) GetGuilds(meetingID string) map[string]struct{} {
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+
 	if guildList, exists := b.meetingGuilds[meetingID]; exists {
 		return guildList
 	}
@@ -58,6 +70,9 @@ func (b *bimap) GetGuilds(meetingID string) map[string]struct{} {
 }
 
 func (b *bimap) GetMeetings(guildID string) map[string]struct{} {
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+
 	if meetingList, exists := b.guildMeetings[guildID]; exists {
 		return meetingList
 	}
@@ -65,6 +80,9 @@ func (b *bimap) GetMeetings(guildID string) map[string]struct{} {
 }
 
 func (b *bimap) Exists(guildID string, meetingID string) bool {
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+
 	if guildList, exists := b.guildMeetings[guildID]; exists {
 		_, present := guildList[meetingID]
 		return present
@@ -73,6 +91,9 @@ func (b *bimap) Exists(guildID string, meetingID string) bool {
 }
 
 func (b *bimap) ActiveMeeting(meetingID string) bool {
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+
 	if _, exists := b.meetingGuilds[meetingID]; exists && len(b.meetingGuilds[meetingID]) != 0 {
 		return true
 	}

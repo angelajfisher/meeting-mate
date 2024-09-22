@@ -10,7 +10,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/angelajfisher/meeting-mate/internal/utils"
+	"github.com/angelajfisher/meeting-mate/internal/types"
 )
 
 var Secret string
@@ -72,7 +72,7 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if eventData.Event == utils.ZoomEndpointValidation {
+	if eventData.Event == types.ZoomEndpointValidation {
 		log.Println("Webhook received: URL validation request")
 
 		var response []byte
@@ -94,7 +94,7 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("Webhook received: Updating applicable watched meetings")
 
-	var botData utils.EventData
+	var botData types.EventData
 
 	var payloadData Meeting
 	err = json.Unmarshal(payload, &ObjectWrapper{&payloadData})
@@ -102,18 +102,18 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 
-	if !utils.MeetingWatches.ActiveMeeting(payloadData.ID) {
+	if !types.MeetingWatches.ActiveMeeting(payloadData.ID) {
 		return
 	}
 
-	botData = utils.EventData{EventType: eventData.Event, MeetingName: payloadData.Topic}
+	botData = types.EventData{EventType: eventData.Event, MeetingName: payloadData.Topic}
 
-	if eventData.Event == utils.ZoomParticipantJoin || eventData.Event == utils.ZoomParticipantLeave {
+	if eventData.Event == types.ZoomParticipantJoin || eventData.Event == types.ZoomParticipantLeave {
 		botData.ParticipantName = payloadData.Participant.UserName
 		botData.ParticipantID = payloadData.Participant.UserID
 	}
 
-	for _, dataChannel := range utils.DataListeners[payloadData.ID] {
+	for _, dataChannel := range types.DataListeners.GetMeetingListeners(payloadData.ID) {
 		dataChannel <- botData
 	}
 }
