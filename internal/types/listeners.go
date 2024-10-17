@@ -13,7 +13,7 @@ func newDataListeners() *dataListeners {
 	}
 }
 
-func (dl *dataListeners) Add(guildID string, meetingID string) chan EventData {
+func (dl *dataListeners) Listen(guildID string, meetingID string) chan EventData {
 	if dl.exists(guildID, meetingID) {
 		return dl.listeners[meetingID][guildID]
 	}

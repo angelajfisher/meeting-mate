@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/angelajfisher/meeting-mate/internal/bot/interactions"
+	"github.com/angelajfisher/meeting-mate/internal/types"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -70,8 +71,10 @@ func Stop() error {
 	fmt.Print("Bot shutting down...")
 
 	// Notify all active watchers of shutdown
-	for _, w := range interactions.Watches {
-		w.ShutdownNotice <- struct{}{}
+	for _, meeting := range types.AllMeetings.Meetings {
+		for _, watch := range types.DataListeners.GetMeetingListeners(meeting.GetID()) {
+			watch <- types.EventData{EventType: types.BotShutdown}
+		}
 	}
 
 	// Give watchers time to stop

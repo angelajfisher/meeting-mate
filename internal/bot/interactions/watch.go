@@ -13,7 +13,6 @@ var (
 )
 
 type watchProcess struct {
-	ShutdownNotice    chan struct{}
 	Meeting           *types.Meeting         // The Zoom meeting being watched
 	GuildID           string                 // The ID of the Discord guild this watch is for
 	channelID         string                 // The ID of the channel this watch is for
@@ -88,7 +87,6 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 		sendSilently = v.BoolValue()
 	}
 	watch := watchProcess{
-		ShutdownNotice:    make(chan struct{}, 1),
 		Meeting:           types.AllMeetings.NewMeeting(newMeetingID),
 		GuildID:           i.GuildID,
 		session:           s,
@@ -111,7 +109,7 @@ func (w *watchProcess) listen() {
 	var err error
 
 	meetingID := w.Meeting.GetID()
-	for zoomData := range types.DataListeners.Add(w.GuildID, meetingID) {
+	for zoomData := range types.DataListeners.Listen(w.GuildID, meetingID) {
 		if zoomData.EventType == types.WatchCanceled {
 			w.meetingMsgContent.Embeds[0].Description = "**Status Unknown**\nThe watch on this meeting was canceled."
 			w.meetingMsgContent.Components = []discordgo.MessageComponent{}
