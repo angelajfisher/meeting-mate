@@ -2,6 +2,7 @@ package interactions
 
 import (
 	"log"
+	"net/url"
 
 	"github.com/angelajfisher/meeting-mate/internal/types"
 	"github.com/bwmarrin/discordgo"
@@ -18,6 +19,7 @@ type watchProcess struct {
 	channelID         string                 // The ID of the channel this watch is for
 	session           *discordgo.Session     // The active Discord session used for communication
 	silent            bool                   // Whether messages should be sent with the @silent flag
+	joinLink          string                 // User-supplied link for others to join the meeting
 	meetingInProgress bool                   // Whether the meeting is currently ongoing
 	meetingMsgContent *discordgo.MessageSend // The data the message should contain
 	meetingStatusMsg  *discordgo.Message     // The message sent by the bot
@@ -46,6 +48,19 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 		responseMsg.msg = "Please supply a valid meeting ID to watch."
 		responseMsg.flags = discordgo.MessageFlagsEphemeral
 		responseMsg.terminate = true
+	}
+
+	// Check for valid join link if provided
+	joinLink := ""
+	if v, ok := opts["join_link"]; ok {
+		u, parseErr := url.Parse(v.StringValue())
+		if parseErr == nil && u.Scheme == "https" {
+			joinLink = v.StringValue()
+		} else {
+			responseMsg.msg = "Invalid join link provided. Please ensure your URL is correct and starts with \"https://\""
+			responseMsg.flags = discordgo.MessageFlagsEphemeral
+			responseMsg.terminate = true
+		}
 	}
 
 	if !responseMsg.terminate {
@@ -79,6 +94,7 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 		session:           s,
 		channelID:         i.ChannelID,
 		silent:            sendSilently,
+		joinLink:          joinLink,
 		meetingInProgress: false,
 		meetingMsgContent: &discordgo.MessageSend{Embeds: []*discordgo.MessageEmbed{{Type: discordgo.EmbedTypeRich,
 			Description: "Loading..."}}},
@@ -98,11 +114,13 @@ func (w *watchProcess) listen() {
 	for zoomData := range types.DataListeners.Add(w.GuildID, meetingID) {
 		if zoomData.EventType == types.WatchCanceled {
 			w.meetingMsgContent.Embeds[0].Description = "**Status Unknown**\nThe watch on this meeting was canceled."
+			w.meetingMsgContent.Components = []discordgo.MessageComponent{}
 			types.MeetingWatches.Remove(w.GuildID, meetingID)
 			break
 		} else if zoomData.EventType == types.BotShutdown {
 			w.meetingMsgContent.Embeds[0].Description = "**Status Unknown**\nThe watch stopped due to bot shutdown." +
 				" Please restart with `/watch " + meetingID + "` when available."
+			w.meetingMsgContent.Components = []discordgo.MessageComponent{}
 			break
 		}
 
@@ -119,6 +137,17 @@ func (w *watchProcess) listen() {
 			w.meetingMsgContent.Embeds[0].Title = w.Meeting.Name(zoomData.MeetingName)
 			w.meetingMsgContent.Embeds[0].Description = "This meeting is in progress."
 			w.meetingMsgContent.Embeds[0].Fields = []*discordgo.MessageEmbedField{{Name: "Current Participants"}}
+			if w.joinLink != "" {
+				w.meetingMsgContent.Components = []discordgo.MessageComponent{
+					discordgo.ActionsRow{Components: []discordgo.MessageComponent{
+						discordgo.Button{
+							Label: "Join",
+							URL:   w.joinLink,
+							Style: discordgo.LinkButton,
+						},
+					}},
+				}
+			}
 		}
 
 		w.updateMeetingMsg(zoomData)
@@ -128,9 +157,10 @@ func (w *watchProcess) listen() {
 	if w.meetingStatusMsg != nil {
 		w.meetingMsgContent.Embeds[0].Fields = nil
 		updatedContent := discordgo.MessageEdit{
-			Embeds:  &w.meetingMsgContent.Embeds,
-			ID:      w.meetingStatusMsg.ID,
-			Channel: w.meetingStatusMsg.ChannelID,
+			Embeds:     &w.meetingMsgContent.Embeds,
+			ID:         w.meetingStatusMsg.ID,
+			Channel:    w.meetingStatusMsg.ChannelID,
+			Components: &[]discordgo.MessageComponent{},
 		}
 		if _, err = w.session.ChannelMessageEditComplex(&updatedContent); err != nil {
 			log.Printf("could not respond to interaction: %s", err)
@@ -155,13 +185,15 @@ func (w *watchProcess) updateMeetingMsg(zoomData types.EventData) {
 		w.meetingMsgContent.Embeds[0].Description = "This meeting ended."
 		w.meetingMsgContent.Embeds[0].Fields = nil
 		w.meetingInProgress = false
+		w.meetingMsgContent.Components = []discordgo.MessageComponent{}
 	}
 
 	if w.meetingStatusMsg != nil {
 		updatedContent := discordgo.MessageEdit{
-			Embeds:  &w.meetingMsgContent.Embeds,
-			ID:      w.meetingStatusMsg.ID,
-			Channel: w.meetingStatusMsg.ChannelID,
+			Embeds:     &w.meetingMsgContent.Embeds,
+			ID:         w.meetingStatusMsg.ID,
+			Channel:    w.meetingStatusMsg.ChannelID,
+			Components: &w.meetingMsgContent.Components,
 		}
 		w.meetingStatusMsg, err = w.session.ChannelMessageEditComplex(&updatedContent)
 		if err != nil {

@@ -20,6 +20,11 @@ var InteractionList = []*discordgo.ApplicationCommand{
 				Description: "Post status updates @silent-ly (default: true)",
 				Type:        discordgo.ApplicationCommandOptionBoolean,
 			},
+			{
+				Name:        "join_link",
+				Description: "Link for others to join the meeting",
+				Type:        discordgo.ApplicationCommandOptionString,
+			},
 		},
 	}, {
 		Name:        "cancel",
