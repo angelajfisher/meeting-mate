@@ -25,6 +25,11 @@ var InteractionList = []*discordgo.ApplicationCommand{
 				Description: "Link for others to join the meeting",
 				Type:        discordgo.ApplicationCommandOptionString,
 			},
+			{
+				Name:        "summary",
+				Description: "Display meeting stats after it ends (default: false)",
+				Type:        discordgo.ApplicationCommandOptionBoolean,
+			},
 		},
 	}, {
 		Name:        "cancel",

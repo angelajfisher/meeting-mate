@@ -5,37 +5,46 @@ import (
 	"sync"
 )
 
+type Participant struct {
+	id      string
+	name    string
+	present bool
+}
+
 type ParticipantList struct {
-	participants map[string]string // map[participantID]participantName
+	participants map[string]Participant // map[participantID]Participant
 	mu           sync.RWMutex
 }
 
 func newParticipantList() *ParticipantList {
 	return &ParticipantList{
-		participants: make(map[string]string),
+		participants: make(map[string]Participant),
 	}
 }
 
-func (pl *ParticipantList) Add(participantID string, participantName string) {
-	if name, _ := pl.exists(participantID); name == participantName {
+func (pl *ParticipantList) Add(participantID string, participantName string, present bool) {
+	if name, currentlyPresent := pl.present(participantID); name == participantName && currentlyPresent == present {
 		return
 	}
 
 	pl.mu.Lock()
 	defer pl.mu.Unlock()
 
-	pl.participants[participantID] = participantName
+	pl.participants[participantID] = Participant{id: participantID, name: participantName, present: present}
 }
 
 func (pl *ParticipantList) Remove(participantID string) {
-	if _, exists := pl.exists(participantID); !exists {
+	if _, exists := pl.present(participantID); !exists {
+		pl.Add(participantID, "", false)
 		return
 	}
 
 	pl.mu.Lock()
 	defer pl.mu.Unlock()
 
-	delete(pl.participants, participantID)
+	participant := pl.participants[participantID]
+	participant.present = false
+	pl.participants[participantID] = participant
 }
 
 func (pl *ParticipantList) Stringify() string {
@@ -44,8 +53,10 @@ func (pl *ParticipantList) Stringify() string {
 	pl.mu.RLock()
 	defer pl.mu.RUnlock()
 
-	for _, name := range pl.participants {
-		builder.WriteString(name + "\n")
+	for _, participant := range pl.participants {
+		if participant.present {
+			builder.WriteString(participant.name + "\n")
+		}
 	}
 	if builder.String() == "" {
 		builder.WriteString("Unknown")
@@ -54,17 +65,22 @@ func (pl *ParticipantList) Stringify() string {
 	return builder.String()
 }
 
-func (pl *ParticipantList) Empty() {
+func (pl *ParticipantList) Empty() int {
 	pl.mu.Lock()
 	defer pl.mu.Unlock()
 
+	numParticipants := len(pl.participants)
 	clear(pl.participants)
+	return numParticipants
 }
 
-func (pl *ParticipantList) exists(participantID string) (string, bool) {
+func (pl *ParticipantList) present(participantID string) (string, bool) {
 	pl.mu.RLock()
 	defer pl.mu.RUnlock()
 
-	name, exists := pl.participants[participantID]
-	return name, exists
+	participant, exists := pl.participants[participantID]
+	if !exists {
+		return "", false
+	}
+	return participant.name, participant.present
 }

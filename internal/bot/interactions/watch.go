@@ -1,6 +1,7 @@
 package interactions
 
 import (
+	"fmt"
 	"log"
 	"net/url"
 
@@ -19,6 +20,7 @@ type watchProcess struct {
 	session           *discordgo.Session     // The active Discord session used for communication
 	silent            bool                   // Whether messages should be sent with the @silent flag
 	joinLink          string                 // User-supplied link for others to join the meeting
+	showStats         bool                   // Whether meetings stats should be sent at the end of a meeting
 	meetingInProgress bool                   // Whether the meeting is currently ongoing
 	meetingMsgContent *discordgo.MessageSend // The data the message should contain
 	meetingStatusMsg  *discordgo.Message     // The message sent by the bot
@@ -86,6 +88,10 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 	if v, ok := opts["silent"]; ok && !v.BoolValue() {
 		sendSilently = v.BoolValue()
 	}
+	summary := false
+	if v, ok := opts["summary"]; ok {
+		summary = v.BoolValue()
+	}
 	watch := watchProcess{
 		Meeting:           types.AllMeetings.NewMeeting(newMeetingID),
 		GuildID:           i.GuildID,
@@ -93,6 +99,7 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, opts opti
 		channelID:         i.ChannelID,
 		silent:            sendSilently,
 		joinLink:          joinLink,
+		showStats:         summary,
 		meetingInProgress: false,
 		meetingMsgContent: &discordgo.MessageSend{Embeds: []*discordgo.MessageEmbed{{Type: discordgo.EmbedTypeRich,
 			Description: "Loading..."}}},
@@ -171,7 +178,7 @@ func (w *watchProcess) updateMeetingMsg(zoomData types.EventData) {
 
 	switch zoomData.EventType {
 	case types.ZoomParticipantJoin:
-		w.Meeting.Participants.Add(zoomData.ParticipantID, zoomData.ParticipantName)
+		w.Meeting.Participants.Add(zoomData.ParticipantID, zoomData.ParticipantName, true)
 		w.meetingMsgContent.Embeds[0].Fields[0].Value = w.Meeting.Participants.Stringify()
 
 	case types.ZoomParticipantLeave:
@@ -179,11 +186,17 @@ func (w *watchProcess) updateMeetingMsg(zoomData types.EventData) {
 		w.meetingMsgContent.Embeds[0].Fields[0].Value = w.Meeting.Participants.Stringify()
 
 	case types.ZoomMeetingEnd:
-		w.Meeting.Participants.Empty()
+		totalParticipants := w.Meeting.Participants.Empty()
 		w.meetingMsgContent.Embeds[0].Description = "This meeting ended."
-		w.meetingMsgContent.Embeds[0].Fields = nil
 		w.meetingInProgress = false
 		w.meetingMsgContent.Components = []discordgo.MessageComponent{}
+		if w.showStats {
+			w.meetingMsgContent.Embeds[0].Fields = []*discordgo.MessageEmbedField{
+				{Name: "Summary", Value: fmt.Sprintf("Total Participants: %v", totalParticipants)},
+			}
+		} else {
+			w.meetingMsgContent.Embeds[0].Fields = nil
+		}
 	}
 
 	if w.meetingStatusMsg != nil {
