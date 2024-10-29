@@ -30,6 +30,16 @@ var InteractionList = []*discordgo.ApplicationCommand{
 				Description: "Display meeting stats after it ends (default: false)",
 				Type:        discordgo.ApplicationCommandOptionBoolean,
 			},
+			{
+				Name:        "keep_history",
+				Description: "How often new messages are sent / old ones deleted (default: Partial)",
+				Type:        discordgo.ApplicationCommandOptionString,
+				Choices: []*discordgo.ApplicationCommandOptionChoice{
+					{Name: "Full", Value: FullHistory},
+					{Name: "Partial", Value: PartialHistory},
+					{Name: "Minimal", Value: MinimalHistory},
+				},
+			},
 		},
 	}, {
 		Name:        "cancel",
