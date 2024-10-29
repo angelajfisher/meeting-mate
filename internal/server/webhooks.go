@@ -111,6 +111,9 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 	if eventData.Event == types.ZoomParticipantJoin || eventData.Event == types.ZoomParticipantLeave {
 		botData.ParticipantName = payloadData.Participant.UserName
 		botData.ParticipantID = payloadData.Participant.UserID
+	} else if eventData.Event == types.ZoomMeetingEnd {
+		botData.StartTime = payloadData.StartTime
+		botData.EndTime = payloadData.EndTime
 	}
 
 	for _, dataChannel := range types.DataListeners.GetMeetingListeners(payloadData.ID) {

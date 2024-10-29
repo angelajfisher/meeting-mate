@@ -5,6 +5,8 @@ type EventData struct {
 	MeetingName     string
 	ParticipantName string
 	ParticipantID   string
+	StartTime       string
+	EndTime         string
 }
 
 const (
@@ -14,6 +16,7 @@ const (
 	ZoomParticipantLeave   = "meeting.participant_left"
 	WatchCanceled          = "canceled"
 	BotShutdown            = "shutdown"
+	ZoomTimeFormat         = "2006-01-02T15:04:05Z"
 )
 
 var (

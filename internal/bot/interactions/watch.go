@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"time"
 
 	"github.com/angelajfisher/meeting-mate/internal/types"
 	"github.com/bwmarrin/discordgo"
@@ -191,8 +192,9 @@ func (w *watchProcess) updateMeetingMsg(zoomData types.EventData) {
 		w.meetingInProgress = false
 		w.meetingMsgContent.Components = []discordgo.MessageComponent{}
 		if w.showStats {
+			meetingDuration := calcMeetingDuration(zoomData.StartTime, zoomData.EndTime)
 			w.meetingMsgContent.Embeds[0].Fields = []*discordgo.MessageEmbedField{
-				{Name: "Summary", Value: fmt.Sprintf("Total Participants: %v", totalParticipants)},
+				{Name: "Summary", Value: fmt.Sprintf("Total Participants: %v\nDuration: %s", totalParticipants, meetingDuration)},
 			}
 		} else {
 			w.meetingMsgContent.Embeds[0].Fields = nil
@@ -216,4 +218,24 @@ func (w *watchProcess) updateMeetingMsg(zoomData types.EventData) {
 	} else {
 		log.Println("could not update meeting status: meeting message is nil")
 	}
+}
+
+func calcMeetingDuration(start string, end string) string {
+	calcDuration := true // whether to return actual calculation; changes to false upon error
+
+	startTime, err := time.Parse(types.ZoomTimeFormat, start)
+	if err != nil {
+		log.Printf("could not parse meeting start time: %s", err)
+		calcDuration = false
+	}
+	endTime, err := time.Parse(types.ZoomTimeFormat, end)
+	if err != nil {
+		log.Printf("could not parse meeting end time: %s", err)
+		calcDuration = false
+	}
+
+	if calcDuration {
+		return endTime.Sub(startTime).String()
+	}
+	return "Unknown"
 }
