@@ -1,5 +1,6 @@
-FROM golang:1.22
+FROM golang:1.23
 
 WORKDIR /app
 
+RUN go install github.com/go-delve/delve/cmd/dlv@latest
 RUN go install github.com/air-verse/air@latest

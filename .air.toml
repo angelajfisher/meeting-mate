@@ -7,11 +7,18 @@ tmp_dir = "tmp"
 
 [build]
 # Just plain old shell command. You could use `make` as well.
-cmd = "go build -o ./tmp/main ./cmd/meeting-mate"
+cmd = "go build -o ./tmp/main ./cmd/mm-dev"
 # Binary file yields from `cmd`.
 bin = "tmp/main"
-# Customize binary, can setup environment variables when run your app.
+
+# # Customize binary, can setup environment variables when run your app.
+#
+# # DEBUGGER BIN
+# full_bin = "dlv exec --accept-multiclient --log --headless --listen :2345 --api-version 2 ./tmp/main --"
+#
+# # DEV BIN
 full_bin = "./tmp/main --dev"
+
 # Watch these filename extensions.
 include_ext = ["go", "tpl", "tmpl", "html"]
 # Ignore these filename extensions or directories.
@@ -41,7 +48,7 @@ stop_on_error = true
 # Send Interrupt signal before killing process (windows does not support this feature)
 send_interrupt = true
 # Delay after sending Interrupt signal
-kill_delay = 50000000000 # nanosecond
+kill_delay = 0 # nanosecond
 # Rerun binary or not
 rerun = false
 # Delay after each executions
