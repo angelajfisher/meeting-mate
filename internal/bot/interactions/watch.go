@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	FullHistory    = "full"
-	PartialHistory = "partial"
-	MinimalHistory = "minimal"
+	FullHistory    = "full"    // No old meeting messages are removed
+	PartialHistory = "partial" // Keep the old meeting message only if it's been buried by conversation
+	MinimalHistory = "minimal" // Do not keep any old meeting messages
 )
 
 var Watches []watchProcess // All ongoing watch processes
@@ -139,27 +139,26 @@ func (w *watchProcess) listen() {
 			break
 		}
 
+		// Remove old meeting message if needed (full history messages will be nil if not in progress)
 		if !w.meetingInProgress && w.meetingStatusMsg != nil {
-			switch w.historyLevel {
-			case PartialHistory:
-				// If keeping partial history, start a new meeting message only if the old one has been buried by conversation
-				channel, chanErr := w.session.Channel(w.channelID)
-				if chanErr != nil {
-					log.Printf("could not get channel info: %s", chanErr)
-					break
+			func() {
+				defer func() { w.meetingStatusMsg = nil }()
+				if w.historyLevel == PartialHistory {
+					channel, chanErr := w.session.Channel(w.channelID)
+					if chanErr != nil {
+						log.Printf("could not get channel info: %s", chanErr)
+						return
+					}
+					// Keep meeting history if it's been buried by conversation
+					if channel.LastMessageID != w.meetingStatusMsg.ID {
+						return
+					}
 				}
-
-				if channel.LastMessageID != w.meetingStatusMsg.ID {
-					w.meetingStatusMsg = nil
-				}
-			case MinimalHistory:
-				// If keeping minimal history, delete the previous meeting message from the channel before sending a new one
 				delErr := w.session.ChannelMessageDelete(w.channelID, w.meetingStatusMsg.ID)
 				if delErr != nil {
 					log.Printf("could not delete previous meeting message: %s", delErr)
 				}
-				w.meetingStatusMsg = nil
-			}
+			}()
 		}
 
 		if w.meetingStatusMsg == nil {
@@ -244,6 +243,7 @@ func (w *watchProcess) updateMeetingMsg(zoomData types.EventData) {
 		if err != nil {
 			log.Printf("could not respond to interaction: %s\n", err)
 		}
+		// Since all messages are kept with full history, remove reference to old message so it isn't removed
 		if !w.meetingInProgress && w.historyLevel == FullHistory {
 			w.meetingStatusMsg = nil
 		}
