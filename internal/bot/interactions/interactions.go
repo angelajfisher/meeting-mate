@@ -4,7 +4,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var InteractionList = []*discordgo.ApplicationCommand{
+func InteractionList() []*discordgo.ApplicationCommand {
+	return []*discordgo.ApplicationCommand{
 	{
 		Name:        "watch",
 		Description: "Begin watching a meeting's participant list",
@@ -55,6 +56,7 @@ var InteractionList = []*discordgo.ApplicationCommand{
 		Name:        "status",
 		Description: "Check the status of your ongoing watch(es)",
 	},
+	}
 }
 
 type optionMap = map[string]*discordgo.ApplicationCommandInteractionDataOption

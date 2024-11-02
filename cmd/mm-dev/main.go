@@ -19,7 +19,7 @@ import (
 // Currently the only difference is that this doesn't require the --dev flag
 
 func main() {
-	devMode, err := validateEnv()
+	botConfig, serverConfig, err := validateEnv()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
@@ -35,20 +35,20 @@ func main() {
 		return nil
 	}, func(error) {
 		close(osSignal)
-		err = bot.Stop()
+		err = bot.Stop(botConfig)
 		if err != nil {
 			log.Println(err)
 		}
 	})
 
-	g.Add(func() error { return server.Start(*devMode) }, func(error) {
-		err = server.Stop()
+	g.Add(func() error { return server.Start(serverConfig) }, func(error) {
+		err = server.Stop(serverConfig)
 		if err != nil {
 			log.Println(err)
 		}
 	})
 
-	err = bot.Run()
+	err = bot.Run(botConfig)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "fatal error: %s", err)
 		os.Exit(1)
@@ -63,8 +63,8 @@ func main() {
 	fmt.Println("See you later! o/")
 }
 
-func validateEnv() (*bool, error) {
-	devMode := flag.Bool("dev", true, "run the program in development mode")
+func validateEnv() (*bot.Config, *server.Config, error) {
+	devMode := flag.Bool("dev", false, "run the program in development mode")
 	envPath := flag.String("envFile", "", "program will load environment variables from the file at this path if provided")
 	staticDir := flag.String("staticDir", "./static", "path to static directory containing site files")
 	webhookPort := flag.String(
@@ -77,28 +77,33 @@ func validateEnv() (*bool, error) {
 	if *envPath != "" {
 		err := godotenv.Load(*envPath)
 		if err != nil {
-			return nil, errors.New("could not load .env file at provided path")
+			return nil, nil, errors.New("could not load .env file at provided path")
 		}
 	}
 
 	if *devMode {
 		fmt.Println("WARN: Initializing Meeting Mate in DEVELOPMENT mode")
 	} else if os.Getenv("SSL_CERT") == "" || os.Getenv("SSL_KEY") == "" {
-		return nil, errors.New("required SSL_CERT and/or SSL_KEY filepaths missing from environment")
+		return nil, nil, errors.New("required SSL_CERT and/or SSL_KEY filepaths missing from environment")
 	}
 
-	server.BaseURL = "/projects/meeting-mate"
-	server.StaticDir = *staticDir
-	server.Port = *webhookPort
-	server.Secret = os.Getenv("ZOOM_TOKEN")
-	bot.BotToken = os.Getenv("BOT_TOKEN")
-	bot.AppID = os.Getenv("APP_ID")
+	botConf := bot.Config{
+		BotToken: os.Getenv("BOT_TOKEN"),
+		AppID:    os.Getenv("APP_ID"),
+	}
+	serverConf := server.Config{
+		DevMode:   *devMode,
+		BaseURL:   "/projects/meeting-mate",
+		StaticDir: *staticDir,
+		Port:      *webhookPort,
+		Secret:    os.Getenv("ZOOM_TOKEN"),
+	}
 
-	if bot.BotToken == "" || bot.AppID == "" || server.Secret == "" {
-		return nil, errors.New(
+	if botConf.BotToken == "" || botConf.AppID == "" || serverConf.Secret == "" {
+		return nil, nil, errors.New(
 			"required ZOOM_TOKEN, BOT_TOKEN, and/or APP_ID variables missing from environment",
 		)
 	}
 
-	return devMode, nil
+	return &botConf, &serverConf, nil
 }

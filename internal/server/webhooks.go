@@ -13,8 +13,6 @@ import (
 	"github.com/angelajfisher/meeting-mate/internal/types"
 )
 
-var Secret string
-
 type ZoomData struct {
 	Payload interface{} `json:"payload"`
 	EventTS int64       `json:"event_ts"`
@@ -57,7 +55,7 @@ type ObjectWrapper struct {
 	Object interface{} `json:"object"`
 }
 
-func handleWebhooks(w http.ResponseWriter, r *http.Request) {
+func (s Config) handleWebhooks(w http.ResponseWriter, r *http.Request) {
 	reqBody, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Println(err)
@@ -76,7 +74,7 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 		log.Println("Webhook received: URL validation request")
 
 		var response []byte
-		response, err = validateEndpoint(payload)
+		response, err = validateEndpoint(payload, s.Secret)
 		if err != nil {
 			log.Println(err)
 			return
@@ -121,14 +119,14 @@ func handleWebhooks(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func validateEndpoint(payload json.RawMessage) ([]byte, error) {
+func validateEndpoint(payload json.RawMessage, secret string) ([]byte, error) {
 	var payloadData URLValidation
 	err := json.Unmarshal(payload, &payloadData)
 	if err != nil {
 		return []byte{}, fmt.Errorf("could not validate zoom endpoint: %w", err)
 	}
 
-	hasher := hmac.New(sha256.New, []byte(Secret))
+	hasher := hmac.New(sha256.New, []byte(secret))
 	hasher.Write([]byte(payloadData.PlainToken))
 
 	payloadData.EncryptedToken = hex.EncodeToString(hasher.Sum(nil))
