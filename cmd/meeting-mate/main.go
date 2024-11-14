@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/angelajfisher/meeting-mate/internal/bot"
+	"github.com/angelajfisher/meeting-mate/internal/orchestrator"
 	"github.com/angelajfisher/meeting-mate/internal/server"
 	"github.com/joho/godotenv"
 	"github.com/oklog/run"
@@ -84,16 +85,19 @@ func validateEnv() (*bot.Config, *server.Config, error) {
 		return nil, nil, errors.New("required SSL_CERT and/or SSL_KEY filepaths missing from environment")
 	}
 
+	o := orchestrator.NewOrchestrator()
 	botConf := bot.Config{
-		BotToken: os.Getenv("BOT_TOKEN"),
-		AppID:    os.Getenv("APP_ID"),
+		BotToken:     os.Getenv("BOT_TOKEN"),
+		AppID:        os.Getenv("APP_ID"),
+		Orchestrator: o,
 	}
 	serverConf := server.Config{
-		DevMode:   *devMode,
-		BaseURL:   "/projects/meeting-mate",
-		StaticDir: *staticDir,
-		Port:      *webhookPort,
-		Secret:    os.Getenv("ZOOM_TOKEN"),
+		DevMode:      *devMode,
+		Orchestrator: o,
+		BaseURL:      "/projects/meeting-mate",
+		StaticDir:    *staticDir,
+		Port:         *webhookPort,
+		Secret:       os.Getenv("ZOOM_TOKEN"),
 	}
 
 	if botConf.BotToken == "" || botConf.AppID == "" || serverConf.Secret == "" {

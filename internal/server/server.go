@@ -8,15 +8,18 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/angelajfisher/meeting-mate/internal/orchestrator"
 )
 
 type Config struct {
-	DevMode   bool
-	Port      string
-	BaseURL   string
-	StaticDir string
-	Secret    string
-	server    *http.Server
+	DevMode      bool
+	Orchestrator orchestrator.Orchestrator
+	Port         string
+	BaseURL      string
+	StaticDir    string
+	Secret       string
+	server       *http.Server
 }
 
 func Start(ss *Config) error {

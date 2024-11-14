@@ -2,20 +2,20 @@ package types
 
 import "sync"
 
-type bimap struct {
+type Bimap struct {
 	guildMeetings map[string]map[string]struct{} // map[guildID]map[meetingID] - the meetings being watched by a guild
 	meetingGuilds map[string]map[string]struct{} // map[meetingID]map[guildID] - the guilds watching a meeting
 	mu            sync.RWMutex
 }
 
-func newBimap() *bimap {
-	return &bimap{
+func NewBimap() *Bimap {
+	return &Bimap{
 		guildMeetings: make(map[string]map[string]struct{}),
 		meetingGuilds: make(map[string]map[string]struct{}),
 	}
 }
 
-func (b *bimap) Add(guildID string, meetingID string) {
+func (b *Bimap) Add(guildID string, meetingID string) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -40,7 +40,7 @@ func (b *bimap) Add(guildID string, meetingID string) {
 	}
 }
 
-func (b *bimap) Remove(guildID string, meetingID string) {
+func (b *Bimap) Remove(guildID string, meetingID string) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -59,27 +59,35 @@ func (b *bimap) Remove(guildID string, meetingID string) {
 	}
 }
 
-func (b *bimap) GetGuilds(meetingID string) map[string]struct{} {
+func (b *Bimap) GetGuilds(meetingID string) []string {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
 
 	if guildList, exists := b.meetingGuilds[meetingID]; exists {
-		return guildList
+		allGuilds := make([]string, 0, len(guildList))
+		for guildID := range guildList {
+			allGuilds = append(allGuilds, guildID)
+		}
+		return allGuilds
 	}
-	return make(map[string]struct{})
+	return []string{}
 }
 
-func (b *bimap) GetMeetings(guildID string) map[string]struct{} {
+func (b *Bimap) GetMeetings(guildID string) []string {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
 
 	if meetingList, exists := b.guildMeetings[guildID]; exists {
-		return meetingList
+		allMeetings := make([]string, 0, len(meetingList))
+		for meetingID := range meetingList {
+			allMeetings = append(allMeetings, meetingID)
+		}
+		return allMeetings
 	}
-	return make(map[string]struct{})
+	return []string{}
 }
 
-func (b *bimap) Exists(guildID string, meetingID string) bool {
+func (b *Bimap) Exists(guildID string, meetingID string) bool {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
 
@@ -90,7 +98,7 @@ func (b *bimap) Exists(guildID string, meetingID string) bool {
 	return false
 }
 
-func (b *bimap) ActiveMeeting(meetingID string) bool {
+func (b *Bimap) ActiveMeeting(meetingID string) bool {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
 

@@ -4,13 +4,13 @@ import (
 	"log"
 	"strings"
 
-	"github.com/angelajfisher/meeting-mate/internal/types"
+	"github.com/angelajfisher/meeting-mate/internal/orchestrator"
 	"github.com/bwmarrin/discordgo"
 )
 
-func HandleStatus(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func HandleStatus(s *discordgo.Session, i *discordgo.InteractionCreate, o orchestrator.Orchestrator) {
 	var (
-		activeWatches = types.MeetingWatches.GetMeetings(i.GuildID)
+		activeWatches = o.GetGuildMeetings(i.GuildID)
 		response      string
 	)
 
@@ -19,7 +19,7 @@ func HandleStatus(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	} else {
 		meetingIDs := make([]string, len(activeWatches))
 		i := 0
-		for id := range activeWatches {
+		for _, id := range activeWatches {
 			meetingIDs[i] = id
 			i++
 		}

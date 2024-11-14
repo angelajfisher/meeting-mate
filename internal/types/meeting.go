@@ -4,6 +4,8 @@ import (
 	"sync"
 )
 
+// Note: Potential refactor incoming to remove Meeting structs since they are currently unused
+
 type Meeting struct {
 	Participants *ParticipantList
 	name         string
@@ -14,19 +16,19 @@ type Meeting struct {
 }
 
 type MeetingStore struct {
-	Meetings map[string]*Meeting // map[meetingID]Meeting
+	meetings map[string]*Meeting // map[meetingID]Meeting
 	mu       sync.RWMutex
 }
 
-func newMeetingStore() *MeetingStore {
+func NewMeetingStore() *MeetingStore {
 	return &MeetingStore{
-		Meetings: make(map[string]*Meeting),
+		meetings: make(map[string]*Meeting),
 	}
 }
 
 func (ms *MeetingStore) NewMeeting(id string) *Meeting {
 	if ms.exists(id) {
-		return ms.Meetings[id]
+		return ms.meetings[id]
 	}
 
 	newMeeting := &Meeting{
@@ -36,48 +38,43 @@ func (ms *MeetingStore) NewMeeting(id string) *Meeting {
 		endTime:      "",
 		Participants: newParticipantList(),
 	}
-	ms.add(newMeeting)
+
+	ms.mu.Lock()
+	defer ms.mu.Unlock()
+
+	ms.meetings[id] = newMeeting
 	return newMeeting
+}
+
+func (ms *MeetingStore) AddParticipant(meetingID string, participantID string, participantName string) string {
+	ms.mu.RLock()
+	defer ms.mu.RUnlock()
+
+	ms.meetings[meetingID].Participants.Add(participantID, participantName, true)
+	return ms.meetings[meetingID].Participants.Stringify()
+}
+
+func (ms *MeetingStore) RemoveParticipant(meetingID string, participantID string, participantName string) string {
+	ms.mu.RLock()
+	defer ms.mu.RUnlock()
+
+	ms.meetings[meetingID].Participants.Remove(participantID, participantName)
+	return ms.meetings[meetingID].Participants.Stringify()
+}
+
+func (ms *MeetingStore) EndMeeting(id string) int {
+	ms.mu.RLock()
+	defer ms.mu.RUnlock()
+
+	return ms.meetings[id].Participants.Empty()
 }
 
 func (ms *MeetingStore) exists(meetingID string) bool {
 	ms.mu.RLock()
 	defer ms.mu.RUnlock()
 
-	if _, exists := ms.Meetings[meetingID]; exists {
+	if _, exists := ms.meetings[meetingID]; exists {
 		return true
 	}
 	return false
-}
-
-func (ms *MeetingStore) add(meeting *Meeting) {
-	ms.mu.Lock()
-	defer ms.mu.Unlock()
-
-	ms.Meetings[meeting.id] = meeting
-}
-
-func (m *Meeting) GetID() string {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-
-	return m.id
-}
-
-// this is gross -- fix later
-// names shouldn't/can't change for an ongoing meeting anyway, so this method shouldn't exist...
-// just take the name on meeting creation
-func (m *Meeting) Name(name string) string {
-	m.mu.RLock()
-	if m.name == name {
-		m.mu.RUnlock()
-		return name
-	}
-
-	m.mu.RUnlock()
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	m.name = name
-	return name
 }

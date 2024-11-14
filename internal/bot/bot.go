@@ -6,14 +6,15 @@ import (
 	"time"
 
 	"github.com/angelajfisher/meeting-mate/internal/bot/interactions"
-	"github.com/angelajfisher/meeting-mate/internal/types"
+	"github.com/angelajfisher/meeting-mate/internal/orchestrator"
 	"github.com/bwmarrin/discordgo"
 )
 
 type Config struct {
-	BotToken string
-	AppID    string
-	session  *discordgo.Session
+	BotToken     string
+	AppID        string
+	Orchestrator orchestrator.Orchestrator
+	session      *discordgo.Session
 }
 
 func Run(bc *Config) error {
@@ -26,7 +27,7 @@ func Run(bc *Config) error {
 	bc.session.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if i.Type != discordgo.InteractionApplicationCommand {
 			if i.Type == discordgo.InteractionMessageComponent {
-				interactions.HandleCancelSelection(s, i)
+				interactions.HandleCancelSelection(s, i, bc.Orchestrator)
 			}
 			return
 		}
@@ -34,11 +35,11 @@ func Run(bc *Config) error {
 		data := i.ApplicationCommandData()
 		switch data.Name {
 		case "watch":
-			interactions.HandleWatch(s, i, interactions.ParseOptions(data.Options))
+			interactions.HandleWatch(s, i, bc.Orchestrator, interactions.ParseOptions(data.Options))
 		case "cancel":
-			interactions.HandleCancel(s, i, interactions.ParseOptions(data.Options))
+			interactions.HandleCancel(s, i, bc.Orchestrator, interactions.ParseOptions(data.Options))
 		case "status":
-			interactions.HandleStatus(s, i)
+			interactions.HandleStatus(s, i, bc.Orchestrator)
 		}
 	})
 
@@ -72,13 +73,9 @@ func Stop(bc *Config) error {
 	fmt.Print("Bot shutting down...")
 
 	// Notify all active watchers of shutdown
-	for _, meeting := range types.AllMeetings.Meetings {
-		for _, watch := range types.DataListeners.GetMeetingListeners(meeting.GetID()) {
-			watch <- types.EventData{EventType: types.BotShutdown}
-		}
-	}
+	bc.Orchestrator.Shutdown()
 
-	// Give watchers time to stop
+	// Give watches time to stop
 	time.Sleep(time.Second)
 
 	err := bc.session.Close()

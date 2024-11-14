@@ -63,14 +63,14 @@ func (s Config) handleWebhooks(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var payload json.RawMessage
-	eventData := ZoomData{Payload: &payload}
-	err = json.Unmarshal(reqBody, &eventData)
+	zoomData := ZoomData{Payload: &payload}
+	err = json.Unmarshal(reqBody, &zoomData)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	if eventData.Event == types.ZoomEndpointValidation {
+	if zoomData.Event == types.ZoomEndpointValidation {
 		log.Println("Webhook received: URL validation request")
 
 		var response []byte
@@ -92,31 +92,27 @@ func (s Config) handleWebhooks(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("Webhook received: Updating applicable watched meetings")
 
-	var botData types.EventData
-
 	var payloadData Meeting
 	err = json.Unmarshal(payload, &ObjectWrapper{&payloadData})
 	if err != nil {
 		log.Println(err)
 	}
 
-	if !types.MeetingWatches.ActiveMeeting(payloadData.ID) {
+	if !s.Orchestrator.IsWatchedMeeting(payloadData.ID) {
 		return
 	}
 
-	botData = types.EventData{EventType: eventData.Event, MeetingName: payloadData.Topic}
+	updateData := types.MeetingData{EventType: zoomData.Event, MeetingName: payloadData.Topic}
 
-	if eventData.Event == types.ZoomParticipantJoin || eventData.Event == types.ZoomParticipantLeave {
-		botData.ParticipantName = payloadData.Participant.UserName
-		botData.ParticipantID = payloadData.Participant.UserID
-	} else if eventData.Event == types.ZoomMeetingEnd {
-		botData.StartTime = payloadData.StartTime
-		botData.EndTime = payloadData.EndTime
+	if zoomData.Event == types.ZoomParticipantJoin || zoomData.Event == types.ZoomParticipantLeave {
+		updateData.ParticipantName = payloadData.Participant.UserName
+		updateData.ParticipantID = payloadData.Participant.UserID
+	} else if zoomData.Event == types.ZoomMeetingEnd {
+		updateData.StartTime = payloadData.StartTime
+		updateData.EndTime = payloadData.EndTime
 	}
 
-	for _, dataChannel := range types.DataListeners.GetMeetingListeners(payloadData.ID) {
-		dataChannel <- botData
-	}
+	s.Orchestrator.UpdateMeeting(payloadData.ID, updateData)
 }
 
 func validateEndpoint(payload json.RawMessage, secret string) ([]byte, error) {

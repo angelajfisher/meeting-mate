@@ -33,9 +33,9 @@ func (pl *ParticipantList) Add(participantID string, participantName string, pre
 	pl.participants[participantID] = Participant{id: participantID, name: participantName, present: present}
 }
 
-func (pl *ParticipantList) Remove(participantID string) {
+func (pl *ParticipantList) Remove(participantID string, participantName string) {
 	if _, exists := pl.present(participantID); !exists {
-		pl.Add(participantID, "", false)
+		pl.Add(participantID, participantName, false)
 		return
 	}
 

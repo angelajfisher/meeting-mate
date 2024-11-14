@@ -1,12 +1,20 @@
 package types
 
-type EventData struct {
+type MeetingData struct {
 	EventType       string
 	MeetingName     string
 	ParticipantName string
 	ParticipantID   string
 	StartTime       string
 	EndTime         string
+}
+
+type UpdateData struct {
+	EventType         string
+	MeetingName       string
+	Participants      string
+	TotalParticipants int
+	MeetingDuration   string
 }
 
 const (
@@ -17,12 +25,4 @@ const (
 	WatchCanceled          = "canceled"
 	BotShutdown            = "shutdown"
 	ZoomTimeFormat         = "2006-01-02T15:04:05Z"
-)
-
-var (
-	// Bidirectional map tracking ongoing watches categorized by meetingID and by guildID
-	MeetingWatches  = newBimap()
-	UpdateMeetingID chan struct{ string bool }
-	DataListeners   = newDataListeners()
-	AllMeetings     = newMeetingStore()
 )

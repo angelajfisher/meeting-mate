@@ -4,13 +4,13 @@ import (
 	"log"
 	"strings"
 
-	"github.com/angelajfisher/meeting-mate/internal/types"
+	"github.com/angelajfisher/meeting-mate/internal/orchestrator"
 	"github.com/bwmarrin/discordgo"
 )
 
-const noWatch = "Nothing to cancel: the watch for this meeting is not active."
+const noWatch = "Nothing to cancel: there is no active watch on this meeting."
 
-func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, opts optionMap) {
+func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, o orchestrator.Orchestrator, opts optionMap) {
 	var (
 		err       error
 		meetingID string
@@ -19,21 +19,20 @@ func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, opts opt
 	// Check for a meeting ID provided with the command
 	if v, ok := opts["meeting_id"]; ok && v.StringValue() != "" {
 		meetingID = v.StringValue()
-		log.Printf("%s: /cancel ID %s", i.Member.User, meetingID)
+		log.Printf("%s in %s: /cancel ID %s", i.Member.User, i.GuildID, meetingID)
 	} else {
-		log.Printf("%s: /cancel", i.Member.User)
+		log.Printf("%s in %s: /cancel", i.Member.User, i.GuildID)
 	}
 
 	// ID provided path
-	if meetingID != "" || types.MeetingWatches.Exists(i.GuildID, meetingID) {
+	if meetingID != "" || o.IsOngoingWatch(i.GuildID, meetingID) {
 		var (
 			response string
 			msgFlags discordgo.MessageFlags
 		)
 
-		if types.MeetingWatches.Exists(i.GuildID, meetingID) {
-			types.DataListeners.Remove(i.GuildID, meetingID, types.EventData{EventType: types.WatchCanceled})
-			types.MeetingWatches.Remove(i.GuildID, meetingID)
+		if o.IsOngoingWatch(i.GuildID, meetingID) {
+			o.CancelWatch(i.GuildID, meetingID)
 			response = "Canceled watch on meeting ID `" + meetingID + "`."
 		} else {
 			response = noWatch
@@ -56,7 +55,7 @@ func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, opts opt
 	// ID not provided path
 	// Format all active meeting watches in this server into selectable options
 	guildWatches := []discordgo.SelectMenuOption{}
-	for meeting := range types.MeetingWatches.GetMeetings(i.GuildID) {
+	for _, meeting := range o.GetGuildMeetings(i.GuildID) {
 		guildWatches = append(guildWatches, discordgo.SelectMenuOption{
 			Label: meeting,
 			Value: meeting,
@@ -102,21 +101,18 @@ func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, opts opt
 	}
 }
 
-func HandleCancelSelection(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func HandleCancelSelection(s *discordgo.Session, i *discordgo.InteractionCreate, o orchestrator.Orchestrator) {
 	data := i.MessageComponentData()
 
 	var responseMsg string
 	if len(data.Values) == 1 {
-		for _, dataChannel := range types.DataListeners.GetMeetingListeners(data.Values[0]) {
-			dataChannel <- types.EventData{EventType: types.WatchCanceled}
-		}
+		o.CancelWatch(i.GuildID, data.Values[0])
 		responseMsg = "Canceled watch on meeting ID `" + data.Values[0] + "`."
 	} else {
 		builder := new(strings.Builder)
 		builder.WriteString("Canceled watch on the following meetings:")
 		for _, meetingID := range data.Values {
-			types.DataListeners.Remove(i.GuildID, meetingID, types.EventData{EventType: types.WatchCanceled})
-			types.MeetingWatches.Remove(i.GuildID, meetingID)
+			o.CancelWatch(i.GuildID, meetingID)
 			builder.WriteString("\n- `" + meetingID + "`")
 		}
 		responseMsg = builder.String()
