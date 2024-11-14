@@ -10,20 +10,20 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var (
+type Config struct {
 	BotToken string
 	AppID    string
 	session  *discordgo.Session
-)
+}
 
-func Run() error {
+func Run(bc *Config) error {
 	var err error
-	session, err = discordgo.New("Bot " + BotToken)
+	bc.session, err = discordgo.New("Bot " + bc.BotToken)
 	if err != nil {
 		return fmt.Errorf("invalid bot parameters: %w", err)
 	}
 
-	session.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	bc.session.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if i.Type != discordgo.InteractionApplicationCommand {
 			if i.Type == discordgo.InteractionMessageComponent {
 				interactions.HandleCancelSelection(s, i)
@@ -42,29 +42,30 @@ func Run() error {
 		}
 	})
 
-	session.AddHandler(func(_ *discordgo.Session, r *discordgo.Ready) {
+	bc.session.AddHandler(func(_ *discordgo.Session, r *discordgo.Ready) {
 		log.Println("Logged in as", r.User.String())
 	})
 
-	_, err = session.ApplicationCommandBulkOverwrite(AppID, "", interactions.InteractionList)
+	interacts := interactions.InteractionList()
+	_, err = bc.session.ApplicationCommandBulkOverwrite(bc.AppID, "", interacts)
 	if err != nil {
 		return fmt.Errorf("could not register bot commands: %w", err)
 	}
 
-	err = session.Open()
+	err = bc.session.Open()
 	if err != nil {
 		return fmt.Errorf("could not open bot session: %w", err)
 	}
 
-	if err = session.UpdateCustomStatus("Check the status of your watches with /status"); err != nil {
+	if err = bc.session.UpdateCustomStatus("Check the status of your watches with /status"); err != nil {
 		log.Printf("could not set custom status: %s", err)
 	}
 
 	return nil
 }
 
-func Stop() error {
-	if session == nil {
+func Stop(bc *Config) error {
+	if bc.session == nil {
 		return nil
 	}
 
@@ -80,7 +81,7 @@ func Stop() error {
 	// Give watchers time to stop
 	time.Sleep(time.Second)
 
-	err := session.Close()
+	err := bc.session.Close()
 	if err != nil {
 		return fmt.Errorf("could not close session gracefully: %w", err)
 	}

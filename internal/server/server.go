@@ -10,24 +10,26 @@ import (
 	"time"
 )
 
-var (
+type Config struct {
+	DevMode   bool
 	Port      string
 	BaseURL   string
 	StaticDir string
+	Secret    string
 	server    *http.Server
-)
+}
 
-func Start(devMode bool) error {
+func Start(ss *Config) error {
 	router := http.NewServeMux()
-	fs := http.FileServer(http.Dir(StaticDir))
+	fs := http.FileServer(http.Dir(ss.StaticDir))
 
-	router.Handle("GET "+BaseURL+"/static/", http.StripPrefix(BaseURL+"/static/", fs))
-	router.HandleFunc("POST "+BaseURL+"/webhooks/", handleWebhooks)
-	router.HandleFunc("GET "+BaseURL+"/docs", handleDocs)
-	router.HandleFunc("GET "+BaseURL+"/", handleIndex)
+	router.Handle("GET "+ss.BaseURL+"/static/", http.StripPrefix(ss.BaseURL+"/static/", fs))
+	router.HandleFunc("POST "+ss.BaseURL+"/webhooks/", ss.handleWebhooks)
+	router.HandleFunc("GET "+ss.BaseURL+"/docs", ss.handleDocs)
+	router.HandleFunc("GET "+ss.BaseURL+"/", ss.handleIndex)
 
-	server = &http.Server{
-		Addr:              Port,
+	ss.server = &http.Server{
+		Addr:              ss.Port,
 		Handler:           http.TimeoutHandler(router, 5*time.Second, "Oops, timed out!"),
 		ReadTimeout:       1 * time.Second,
 		WriteTimeout:      5 * time.Second,
@@ -35,13 +37,13 @@ func Start(devMode bool) error {
 		ReadHeaderTimeout: 2 * time.Second,
 	}
 
-	log.Println("Zoom webhook listener starting on", Port)
+	log.Println("Zoom webhook listener starting on", ss.Port)
 
 	var err error
-	if devMode {
-		err = server.ListenAndServe()
+	if ss.DevMode {
+		err = ss.server.ListenAndServe()
 	} else {
-		err = server.ListenAndServeTLS(os.Getenv("SSL_CERT"), os.Getenv("SSL_KEY"))
+		err = ss.server.ListenAndServeTLS(os.Getenv("SSL_CERT"), os.Getenv("SSL_KEY"))
 	}
 	if err != nil {
 		return fmt.Errorf("could not start Zoom webhook listener: %w", err)
@@ -50,8 +52,8 @@ func Start(devMode bool) error {
 	return nil
 }
 
-func Stop() error {
-	if server == nil {
+func Stop(ss *Config) error {
+	if ss.server == nil {
 		return nil
 	}
 
@@ -60,7 +62,7 @@ func Stop() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	err := server.Shutdown(ctx)
+	err := ss.server.Shutdown(ctx)
 	if err != nil {
 		return fmt.Errorf("could not shutdown server gracefully: %w", err)
 	}
@@ -69,20 +71,20 @@ func Stop() error {
 	return nil
 }
 
-func handleIndex(w http.ResponseWriter, r *http.Request) {
+func (s Config) handleIndex(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
 
-	http.ServeFile(w, r, filepath.Join(StaticDir, "/index.html"))
+	http.ServeFile(w, r, filepath.Join(s.StaticDir, "/index.html"))
 
 	elapsedTime := time.Since(startTime)
-	log.Printf("%s '%s' in %s\n", r.Method, r.URL.Path[len(BaseURL):], elapsedTime)
+	log.Printf("%s '%s' in %s\n", r.Method, r.URL.Path[len(s.BaseURL):], elapsedTime)
 }
 
-func handleDocs(w http.ResponseWriter, r *http.Request) {
+func (s Config) handleDocs(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
 
-	http.ServeFile(w, r, filepath.Join(StaticDir, "/docs.html"))
+	http.ServeFile(w, r, filepath.Join(s.StaticDir, "/docs.html"))
 
 	elapsedTime := time.Since(startTime)
-	log.Printf("%s '%s' in %s\n", r.Method, r.URL.Path[len(BaseURL):], elapsedTime)
+	log.Printf("%s '%s' in %s\n", r.Method, r.URL.Path[len(s.BaseURL):], elapsedTime)
 }
