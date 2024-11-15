@@ -4,6 +4,13 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+const (
+	FULL_HISTORY    = "Full"    // No old meeting messages are removed
+	PARTIAL_HISTORY = "Partial" // Keep the old meeting message only if it's been buried by conversation
+	MINIMAL_HISTORY = "Minimal" // Do not keep any old meeting messages
+
+)
+
 func InteractionList() []*discordgo.ApplicationCommand {
 	return []*discordgo.ApplicationCommand{
 		{
@@ -36,9 +43,9 @@ func InteractionList() []*discordgo.ApplicationCommand {
 					Description: "How often new messages are sent / old ones deleted (default: Partial)",
 					Type:        discordgo.ApplicationCommandOptionString,
 					Choices: []*discordgo.ApplicationCommandOptionChoice{
-						{Name: "Full", Value: FullHistory},
-						{Name: "Partial", Value: PartialHistory},
-						{Name: "Minimal", Value: MinimalHistory},
+						{Name: FULL_HISTORY, Value: FULL_HISTORY},
+						{Name: PARTIAL_HISTORY, Value: PARTIAL_HISTORY},
+						{Name: MINIMAL_HISTORY, Value: MINIMAL_HISTORY},
 					},
 				},
 			},

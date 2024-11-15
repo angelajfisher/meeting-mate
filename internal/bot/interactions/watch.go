@@ -4,16 +4,11 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 
 	"github.com/angelajfisher/meeting-mate/internal/orchestrator"
 	"github.com/angelajfisher/meeting-mate/internal/types"
 	"github.com/bwmarrin/discordgo"
-)
-
-const (
-	FullHistory    = "full"    // No old meeting messages are removed
-	PartialHistory = "partial" // Keep the old meeting message only if it's been buried by conversation
-	MinimalHistory = "minimal" // Do not keep any old meeting messages
 )
 
 type watchProcess struct {
@@ -28,6 +23,7 @@ type watchProcess struct {
 	meetingInProgress bool                   // Whether the meeting is currently ongoing
 	meetingMsgContent *discordgo.MessageSend // The data the message should contain
 	meetingStatusMsg  *discordgo.Message     // The message sent by the bot
+	restartCommand    string                 // The command to restart this exact watch
 	o                 orchestrator.Orchestrator
 }
 
@@ -40,7 +36,9 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, o orchest
 			flags     discordgo.MessageFlags
 			terminate bool
 		}
+		restartCommandBuilder = new(strings.Builder)
 	)
+	restartCommandBuilder.WriteString("```/watch meeting_id: " + newMeetingID)
 
 	log.Printf("%s: /watch ID %s in %s", i.Member.User, newMeetingID, i.GuildID)
 
@@ -62,6 +60,7 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, o orchest
 		u, parseErr := url.Parse(v.StringValue())
 		if parseErr == nil && u.Scheme == "https" {
 			joinLink = v.StringValue()
+			restartCommandBuilder.WriteString(" join_link: " + joinLink)
 		} else {
 			responseMsg.msg = "Invalid join link provided. Please ensure your URL is correct and starts with \"https://\""
 			responseMsg.flags = discordgo.MessageFlagsEphemeral
@@ -91,15 +90,19 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, o orchest
 	sendSilently := true
 	if v, ok := opts["silent"]; ok && !v.BoolValue() {
 		sendSilently = v.BoolValue()
+		restartCommandBuilder.WriteString(" silent: false")
 	}
 	summary := false
 	if v, ok := opts["summary"]; ok {
 		summary = v.BoolValue()
+		restartCommandBuilder.WriteString(" summary: true")
 	}
-	keepHistory := PartialHistory
+	keepHistory := PARTIAL_HISTORY
 	if v, ok := opts["keep_history"]; ok {
 		keepHistory = v.StringValue()
+		restartCommandBuilder.WriteString(" keep_history: " + keepHistory)
 	}
+	restartCommandBuilder.WriteString("```")
 	watch := watchProcess{
 		MeetingID:         newMeetingID,
 		GuildID:           i.GuildID,
@@ -113,6 +116,7 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, o orchest
 		meetingMsgContent: &discordgo.MessageSend{Embeds: []*discordgo.MessageEmbed{{Type: discordgo.EmbedTypeRich,
 			Description: "Loading..."}}},
 		meetingStatusMsg: nil,
+		restartCommand:   restartCommandBuilder.String(),
 		o:                o,
 	}
 	if watch.silent {
@@ -123,15 +127,19 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, o orchest
 }
 
 func (w *watchProcess) listen() {
-	var err error
+	var (
+		err      error
+		shutdown = false
+	)
 	for updateData := range w.o.StartWatch(w.GuildID, w.MeetingID) {
-		if updateData.EventType == types.WatchCanceled {
-			w.meetingMsgContent.Embeds[0].Description = "**Status Unknown**\nThe watch on this meeting was canceled."
+		if updateData.EventType == types.BotShutdown {
+			shutdown = true
+			w.meetingMsgContent.Embeds[0].Description = "**Status Unknown**\nThe watch stopped due to bot shutdown." +
+				" Please use the following command to restart when available:\n" + w.restartCommand
 			w.meetingMsgContent.Components = []discordgo.MessageComponent{}
 			break
-		} else if updateData.EventType == types.BotShutdown {
-			w.meetingMsgContent.Embeds[0].Description = "**Status Unknown**\nThe watch stopped due to bot shutdown." +
-				" Please restart with `/watch " + w.MeetingID + "` when available."
+		} else if updateData.EventType == types.WatchCanceled {
+			w.meetingMsgContent.Embeds[0].Description = "**Status Unknown**\nThe watch on this meeting was canceled."
 			w.meetingMsgContent.Components = []discordgo.MessageComponent{}
 			break
 		}
@@ -140,7 +148,7 @@ func (w *watchProcess) listen() {
 		if !w.meetingInProgress && w.meetingStatusMsg != nil {
 			func() {
 				defer func() { w.meetingStatusMsg = nil }()
-				if w.historyLevel == PartialHistory {
+				if w.historyLevel == PARTIAL_HISTORY {
 					channel, chanErr := w.session.Channel(w.channelID)
 					if chanErr != nil {
 						log.Printf("could not get channel info: %s", chanErr)
@@ -199,6 +207,11 @@ func (w *watchProcess) listen() {
 		if _, err = w.session.ChannelMessageEditComplex(&updatedContent); err != nil {
 			log.Printf("could not respond to interaction: %s", err)
 		}
+	} else if shutdown {
+		_, err = w.session.ChannelMessageSendComplex(w.channelID, w.meetingMsgContent)
+		if err != nil {
+			log.Printf("could not respond to interaction: %s", err)
+		}
 	}
 }
 
@@ -236,7 +249,7 @@ func (w *watchProcess) updateMeetingMsg(updateData types.UpdateData) {
 			log.Printf("could not respond to interaction: %s\n", err)
 		}
 		// Since all messages are kept with full history, remove reference to old message so it isn't removed
-		if !w.meetingInProgress && w.historyLevel == FullHistory {
+		if !w.meetingInProgress && w.historyLevel == FULL_HISTORY {
 			w.meetingStatusMsg = nil
 		}
 	} else {
