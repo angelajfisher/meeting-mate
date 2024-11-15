@@ -92,10 +92,10 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, o orchest
 		sendSilently = v.BoolValue()
 		restartCommandBuilder.WriteString(" silent: false")
 	}
-	summary := false
-	if v, ok := opts["summary"]; ok {
+	summary := true
+	if v, ok := opts["summary"]; ok && !v.BoolValue() {
 		summary = v.BoolValue()
-		restartCommandBuilder.WriteString(" summary: true")
+		restartCommandBuilder.WriteString(" summary: false")
 	}
 	keepHistory := PARTIAL_HISTORY
 	if v, ok := opts["keep_history"]; ok {

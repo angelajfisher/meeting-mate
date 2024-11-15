@@ -5,16 +5,18 @@ import (
 )
 
 const (
+	WATCH_COMMAND   = "watch"
+	CANCEL_COMMAND  = "cancel"
+	STATUS_COMMAND  = "status"
 	FULL_HISTORY    = "Full"    // No old meeting messages are removed
 	PARTIAL_HISTORY = "Partial" // Keep the old meeting message only if it's been buried by conversation
 	MINIMAL_HISTORY = "Minimal" // Do not keep any old meeting messages
-
 )
 
 func InteractionList() []*discordgo.ApplicationCommand {
 	return []*discordgo.ApplicationCommand{
 		{
-			Name:        "watch",
+			Name:        WATCH_COMMAND,
 			Description: "Begin watching a meeting's participant list",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
@@ -35,7 +37,7 @@ func InteractionList() []*discordgo.ApplicationCommand {
 				},
 				{
 					Name:        "summary",
-					Description: "Display meeting stats after it ends (default: false)",
+					Description: "Display meeting stats after it ends (default: true)",
 					Type:        discordgo.ApplicationCommandOptionBoolean,
 				},
 				{
@@ -50,7 +52,7 @@ func InteractionList() []*discordgo.ApplicationCommand {
 				},
 			},
 		}, {
-			Name:        "cancel",
+			Name:        CANCEL_COMMAND,
 			Description: "Cancel the watch on a meeting",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
@@ -60,7 +62,7 @@ func InteractionList() []*discordgo.ApplicationCommand {
 				},
 			},
 		}, {
-			Name:        "status",
+			Name:        STATUS_COMMAND,
 			Description: "Check the status of your ongoing watch(es)",
 		},
 	}

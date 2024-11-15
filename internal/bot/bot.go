@@ -34,11 +34,11 @@ func Run(bc *Config) error {
 
 		data := i.ApplicationCommandData()
 		switch data.Name {
-		case "watch":
+		case interactions.WATCH_COMMAND:
 			interactions.HandleWatch(s, i, bc.Orchestrator, interactions.ParseOptions(data.Options))
-		case "cancel":
+		case interactions.CANCEL_COMMAND:
 			interactions.HandleCancel(s, i, bc.Orchestrator, interactions.ParseOptions(data.Options))
-		case "status":
+		case interactions.STATUS_COMMAND:
 			interactions.HandleStatus(s, i, bc.Orchestrator)
 		}
 	})
