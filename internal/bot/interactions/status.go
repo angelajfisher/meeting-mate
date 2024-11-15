@@ -17,6 +17,7 @@ func HandleStatus(s *discordgo.Session, i *discordgo.InteractionCreate, o orches
 	if len(activeWatches) == 0 {
 		response = "There are no ongoing watches in this server. Get one started with `/watch`!"
 	} else {
+		builder := new(strings.Builder)
 		meetingIDs := make([]string, len(activeWatches))
 		i := 0
 		for _, id := range activeWatches {
@@ -24,15 +25,24 @@ func HandleStatus(s *discordgo.Session, i *discordgo.InteractionCreate, o orches
 			i++
 		}
 		if len(activeWatches) == 1 {
-			response = "There is an ongoing watch on meeting ID `" + meetingIDs[0] + "`."
+			builder.WriteString("There is an ongoing watch on meeting ID `" + meetingIDs[0])
+			meetingName := o.GetMeetingName(meetingIDs[0])
+			if meetingName != "" {
+				builder.WriteString("` (" + meetingName + ").")
+			} else {
+				builder.WriteString("`.")
+			}
 		} else {
-			builder := new(strings.Builder)
 			builder.WriteString("The following meeting IDs have ongoing watches:")
 			for _, id := range meetingIDs {
 				builder.WriteString("\n- `" + id + "`")
+				meetingName := o.GetMeetingName(id)
+				if meetingName != "" {
+					builder.WriteString(" (" + meetingName + ")")
+				}
 			}
-			response = builder.String()
 		}
+		response = builder.String()
 	}
 
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{

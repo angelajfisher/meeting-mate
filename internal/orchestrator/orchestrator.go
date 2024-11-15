@@ -36,6 +36,11 @@ func (o Orchestrator) GetGuildMeetings(guildID string) []string {
 	return o.meetingWatches.GetMeetings(guildID)
 }
 
+// Returns the "topic" of a given Zoom meeting if the data is available
+func (o Orchestrator) GetMeetingName(meetingID string) string {
+	return o.allMeetings.GetName(meetingID)
+}
+
 func (o Orchestrator) StartWatch(guildID string, meetingID string) <-chan types.UpdateData {
 	o.allMeetings.NewMeeting(meetingID)
 	o.meetingWatches.Add(guildID, meetingID)
@@ -57,6 +62,8 @@ func (o Orchestrator) UpdateMeeting(meetingID string, data types.MeetingData) {
 		update.MeetingDuration = calcMeetingDuration(data.StartTime, data.EndTime)
 		update.TotalParticipants = o.allMeetings.EndMeeting(meetingID)
 	}
+
+	o.allMeetings.UpdateMeeting(meetingID, data.MeetingName)
 
 	for _, dataChannel := range o.dataListeners.GetMeetingListeners(meetingID) {
 		dataChannel <- update

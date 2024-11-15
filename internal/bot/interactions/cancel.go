@@ -8,7 +8,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-const noWatch = "Nothing to cancel: there is no active watch on this meeting."
+const noWatch = "Nothing to cancel: there is no ongoing watch on this meeting."
 
 func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, o orchestrator.Orchestrator, opts optionMap) {
 	var (
@@ -53,11 +53,16 @@ func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, o orches
 	}
 
 	// ID not provided path
-	// Format all active meeting watches in this server into selectable options
+	// Format all ongoing meeting watches in this server into selectable options
 	guildWatches := []discordgo.SelectMenuOption{}
 	for _, meeting := range o.GetGuildMeetings(i.GuildID) {
+		meetingLabel := meeting
+		meetingName := o.GetMeetingName(meeting)
+		if meetingName != "" {
+			meetingLabel += " (" + meetingName + ")"
+		}
 		guildWatches = append(guildWatches, discordgo.SelectMenuOption{
-			Label: meeting,
+			Label: meetingLabel,
 			Value: meeting,
 		})
 	}
@@ -66,7 +71,7 @@ func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, o orches
 		err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Content: "Nothing to cancel: there are no active watches in this server.",
+				Content: "Nothing to cancel: there are no ongoing watches in this server.",
 				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
@@ -80,7 +85,7 @@ func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, o orches
 	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: "Which active meeting watches would you like to cancel?",
+			Content: "Which ongoing meeting watches would you like to cancel?",
 			Components: []discordgo.MessageComponent{
 				discordgo.ActionsRow{Components: []discordgo.MessageComponent{
 					discordgo.SelectMenu{
@@ -110,7 +115,7 @@ func HandleCancelSelection(s *discordgo.Session, i *discordgo.InteractionCreate,
 		responseMsg = "Canceled watch on meeting ID `" + data.Values[0] + "`."
 	} else {
 		builder := new(strings.Builder)
-		builder.WriteString("Canceled watch on the following meetings:")
+		builder.WriteString("Canceled watches on the following meetings:")
 		for _, meetingID := range data.Values {
 			o.CancelWatch(i.GuildID, meetingID)
 			builder.WriteString("\n- `" + meetingID + "`")

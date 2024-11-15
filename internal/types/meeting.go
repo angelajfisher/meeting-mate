@@ -1,10 +1,9 @@
 package types
 
 import (
+	"log"
 	"sync"
 )
-
-// Note: Potential refactor incoming to remove Meeting structs since they are currently unused
 
 type Meeting struct {
 	Participants *ParticipantList
@@ -12,26 +11,25 @@ type Meeting struct {
 	id           string
 	startTime    string // unused
 	endTime      string // unused
-	mu           sync.RWMutex
 }
 
 type MeetingStore struct {
-	meetings map[string]*Meeting // map[meetingID]Meeting
+	meetings map[string]Meeting // map[meetingID]Meeting
 	mu       sync.RWMutex
 }
 
 func NewMeetingStore() *MeetingStore {
 	return &MeetingStore{
-		meetings: make(map[string]*Meeting),
+		meetings: make(map[string]Meeting),
 	}
 }
 
-func (ms *MeetingStore) NewMeeting(id string) *Meeting {
+func (ms *MeetingStore) NewMeeting(id string) Meeting {
 	if ms.exists(id) {
 		return ms.meetings[id]
 	}
 
-	newMeeting := &Meeting{
+	newMeeting := Meeting{
 		id:           id,
 		name:         "",
 		startTime:    "",
@@ -44,6 +42,31 @@ func (ms *MeetingStore) NewMeeting(id string) *Meeting {
 
 	ms.meetings[id] = newMeeting
 	return newMeeting
+}
+
+// Stores changes to meeting data. Currently only meeting "topics" (names) are tracked
+func (ms *MeetingStore) UpdateMeeting(id string, updatedName string) {
+	ms.mu.RLock()
+	meeting, exists := ms.meetings[id]
+	ms.mu.RUnlock()
+
+	if exists {
+		if meeting.name != updatedName {
+			meeting.name = updatedName
+			ms.mu.Lock()
+			ms.meetings[id] = meeting
+			ms.mu.Unlock()
+		}
+	} else {
+		log.Println("could not update meeting: meeting id " + id + " doesn't exist")
+	}
+}
+
+func (ms *MeetingStore) GetName(id string) string {
+	ms.mu.RLock()
+	defer ms.mu.RUnlock()
+
+	return ms.meetings[id].name
 }
 
 func (ms *MeetingStore) AddParticipant(meetingID string, participantID string, participantName string) string {
