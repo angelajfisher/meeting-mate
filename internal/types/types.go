@@ -17,12 +17,28 @@ type UpdateData struct {
 	MeetingDuration   string
 }
 
+type FeatureFlags struct {
+	Silent       bool   // Whether messages should be sent with the @silent flag
+	JoinLink     string // User-supplied link for others to join the meeting
+	Summaries    bool   // Whether meetings stats should be sent at the end of a meeting
+	HistoryLevel string // How many messages to send / delete as meetings start and end
+}
+
 const (
-	ZoomEndpointValidation = "endpoint.url_validation"
-	ZoomMeetingEnd         = "meeting.ended"
-	ZoomParticipantJoin    = "meeting.participant_joined"
-	ZoomParticipantLeave   = "meeting.participant_left"
-	WatchCanceled          = "canceled"
-	BotShutdown            = "shutdown"
-	ZoomTimeFormat         = "2006-01-02T15:04:05Z"
+	// Zoom event types
+	ZOOM_ENDPOINT_VALIDATION = "endpoint.url_validation"
+	ZOOM_MEETING_END         = "meeting.ended"
+	ZOOM_PARTICIPANT_JOIN    = "meeting.participant_joined"
+	ZOOM_PARTICIPANT_LEAVE   = "meeting.participant_left"
+
+	// System notifications
+	WATCH_CANCELED  = "canceled"
+	SYSTEM_SHUTDOWN = "shutdown"
+
+	// History level options
+	FULL_HISTORY    = "Full"    // No old meeting messages are removed
+	PARTIAL_HISTORY = "Partial" // Keep the old meeting message only if it's been buried by conversation
+	MINIMAL_HISTORY = "Minimal" // Do not keep any old meeting messages
+
+	ZOOM_TIME_FORMAT = "2006-01-02T15:04:05Z"
 )

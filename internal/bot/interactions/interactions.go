@@ -1,6 +1,7 @@
 package interactions
 
 import (
+	"github.com/angelajfisher/meeting-mate/internal/types"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -8,9 +9,6 @@ const (
 	WATCH_COMMAND   = "watch"
 	CANCEL_COMMAND  = "cancel"
 	STATUS_COMMAND  = "status"
-	FULL_HISTORY    = "Full"    // No old meeting messages are removed
-	PARTIAL_HISTORY = "Partial" // Keep the old meeting message only if it's been buried by conversation
-	MINIMAL_HISTORY = "Minimal" // Do not keep any old meeting messages
 )
 
 func InteractionList() []*discordgo.ApplicationCommand {
@@ -45,9 +43,9 @@ func InteractionList() []*discordgo.ApplicationCommand {
 					Description: "How often new messages are sent / old ones deleted (default: Partial)",
 					Type:        discordgo.ApplicationCommandOptionString,
 					Choices: []*discordgo.ApplicationCommandOptionChoice{
-						{Name: FULL_HISTORY, Value: FULL_HISTORY},
-						{Name: PARTIAL_HISTORY, Value: PARTIAL_HISTORY},
-						{Name: MINIMAL_HISTORY, Value: MINIMAL_HISTORY},
+						{Name: types.FULL_HISTORY, Value: types.FULL_HISTORY},
+						{Name: types.PARTIAL_HISTORY, Value: types.PARTIAL_HISTORY},
+						{Name: types.MINIMAL_HISTORY, Value: types.MINIMAL_HISTORY},
 					},
 				},
 			},

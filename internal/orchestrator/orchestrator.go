@@ -54,11 +54,11 @@ func (o Orchestrator) UpdateMeeting(meetingID string, data types.MeetingData) {
 	}
 
 	switch data.EventType {
-	case types.ZoomParticipantJoin:
+	case types.ZOOM_PARTICIPANT_JOIN:
 		update.Participants = o.allMeetings.AddParticipant(meetingID, data.ParticipantID, data.ParticipantName)
-	case types.ZoomParticipantLeave:
+	case types.ZOOM_PARTICIPANT_LEAVE:
 		update.Participants = o.allMeetings.RemoveParticipant(meetingID, data.ParticipantID, data.ParticipantName)
-	case types.ZoomMeetingEnd:
+	case types.ZOOM_MEETING_END:
 		update.MeetingDuration = calcMeetingDuration(data.StartTime, data.EndTime)
 		update.TotalParticipants = o.allMeetings.EndMeeting(meetingID)
 	}
@@ -72,26 +72,26 @@ func (o Orchestrator) UpdateMeeting(meetingID string, data types.MeetingData) {
 
 // Informs a watch process of a cancellation request so it can gracefully stop
 func (o Orchestrator) CancelWatch(guildID string, meetingID string) {
-	o.dataListeners.Remove(guildID, meetingID, types.UpdateData{EventType: types.WatchCanceled})
+	o.dataListeners.Remove(guildID, meetingID, types.UpdateData{EventType: types.WATCH_CANCELED})
 	o.meetingWatches.Remove(guildID, meetingID)
 }
 
 // Informs all watch processes of impeding shutdown so they can act accordingly
 func (o Orchestrator) Shutdown() {
 	for _, watch := range o.dataListeners.GetAllListeners() {
-		watch <- types.UpdateData{EventType: types.BotShutdown}
+		watch <- types.UpdateData{EventType: types.SYSTEM_SHUTDOWN}
 	}
 }
 
 func calcMeetingDuration(start string, end string) string {
 	calcDuration := true // whether to return actual calculation; changes to false upon error
 
-	startTime, err := time.Parse(types.ZoomTimeFormat, start)
+	startTime, err := time.Parse(types.ZOOM_TIME_FORMAT, start)
 	if err != nil {
 		log.Printf("could not parse meeting start time: %s", err)
 		calcDuration = false
 	}
-	endTime, err := time.Parse(types.ZoomTimeFormat, end)
+	endTime, err := time.Parse(types.ZOOM_TIME_FORMAT, end)
 	if err != nil {
 		log.Printf("could not parse meeting end time: %s", err)
 		calcDuration = false

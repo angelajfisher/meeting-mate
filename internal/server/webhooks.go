@@ -70,7 +70,7 @@ func (s Config) handleWebhooks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if zoomData.Event == types.ZoomEndpointValidation {
+	if zoomData.Event == types.ZOOM_ENDPOINT_VALIDATION {
 		log.Println("Webhook received: URL validation request")
 
 		var response []byte
@@ -104,10 +104,10 @@ func (s Config) handleWebhooks(w http.ResponseWriter, r *http.Request) {
 
 	updateData := types.MeetingData{EventType: zoomData.Event, MeetingName: payloadData.Topic}
 
-	if zoomData.Event == types.ZoomParticipantJoin || zoomData.Event == types.ZoomParticipantLeave {
+	if zoomData.Event == types.ZOOM_PARTICIPANT_JOIN || zoomData.Event == types.ZOOM_PARTICIPANT_LEAVE {
 		updateData.ParticipantName = payloadData.Participant.UserName
 		updateData.ParticipantID = payloadData.Participant.UserID
-	} else if zoomData.Event == types.ZoomMeetingEnd {
+	} else if zoomData.Event == types.ZOOM_MEETING_END {
 		updateData.StartTime = payloadData.StartTime
 		updateData.EndTime = payloadData.EndTime
 	}
