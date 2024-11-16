@@ -28,19 +28,19 @@ jobs:
       - name: Install dependencies
         run: go mod tidy
       - name: Build app
-        run: GOOS=linux GOARCH=amd64 go build -v -o ./meeting-mate ./cmd/meeting-mate
+        run: GOOS=linux GOARCH=amd64 go build -v -o ./meeting-mate_linux-amd64 ./cmd/meeting-mate
       - name: Upload build as artifact
         uses: actions/upload-artifact@v4
         id: artifact-upload
         with:
           name: app-artifact
-          path: './meeting-mate'
+          path: './meeting-mate_linux-amd64'
           if-no-files-found: error
           retention-days: 1
       - name: Create new release
         uses: softprops/action-gh-release@v2
         with:
-          files: ./meeting-mate
+          files: ./meeting-mate_linux-amd64
           fail_on_unmatched_files: true
           make_latest: true
           generate_release_notes: true
