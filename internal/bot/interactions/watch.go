@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/url"
-	"strings"
 
 	"github.com/angelajfisher/meeting-mate/internal/orchestrator"
 	"github.com/angelajfisher/meeting-mate/internal/types"
@@ -20,22 +19,19 @@ type watchProcess struct {
 	meetingInProgress bool                   // Whether the meeting is currently ongoing
 	meetingMsgContent *discordgo.MessageSend // The data the message should contain
 	meetingStatusMsg  *discordgo.Message     // The message sent by the bot
-	restartCommand    string                 // The command to restart this exact watch
 	o                 orchestrator.Orchestrator
 }
 
 func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, o orchestrator.Orchestrator, opts optionMap) {
 	var (
-		newMeetingID = opts["meeting_id"].StringValue()
+		newMeetingID = opts[MEETING_OPT].StringValue()
 		err          error
 		responseMsg  struct {
 			msg       string
 			flags     discordgo.MessageFlags
 			terminate bool
 		}
-		restartCommandBuilder = new(strings.Builder)
 	)
-	restartCommandBuilder.WriteString("```/watch meeting_id: " + newMeetingID)
 
 	log.Printf("%s: /watch ID %s in %s", i.Member.User, newMeetingID, i.GuildID)
 
@@ -52,13 +48,9 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, o orchest
 	}
 
 	// Check for valid join link if provided
-	joinLink := ""
-	if v, ok := opts["join_link"]; ok {
+	if v, ok := opts[LINK_OPT]; ok {
 		u, parseErr := url.Parse(v.StringValue())
-		if parseErr == nil && u.Scheme == "https" {
-			joinLink = v.StringValue()
-			restartCommandBuilder.WriteString(" join_link: " + joinLink)
-		} else {
+		if parseErr != nil || u.Scheme != "https" {
 			responseMsg.msg = "Invalid join link provided. Please ensure your URL is correct and starts with \"https://\""
 			responseMsg.flags = discordgo.MessageFlagsEphemeral
 			responseMsg.terminate = true
@@ -84,38 +76,16 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, o orchest
 	}
 
 	// Initialize the new watch process
-	sendSilently := true
-	if v, ok := opts["silent"]; ok && !v.BoolValue() {
-		sendSilently = v.BoolValue()
-		restartCommandBuilder.WriteString(" silent: false")
-	}
-	summary := true
-	if v, ok := opts["summary"]; ok && !v.BoolValue() {
-		summary = v.BoolValue()
-		restartCommandBuilder.WriteString(" summary: false")
-	}
-	keepHistory := types.PARTIAL_HISTORY
-	if v, ok := opts["keep_history"]; ok {
-		keepHistory = v.StringValue()
-		restartCommandBuilder.WriteString(" keep_history: " + keepHistory)
-	}
-	restartCommandBuilder.WriteString("```")
 	watch := watchProcess{
-		meetingID: newMeetingID,
-		guildID:   i.GuildID,
-		flags: types.FeatureFlags{
-			Silent:       sendSilently,
-			JoinLink:     joinLink,
-			Summaries:    summary,
-			HistoryLevel: keepHistory,
-		},
+		meetingID:         newMeetingID,
+		guildID:           i.GuildID,
+		flags:             generateWatchFlags(opts),
 		session:           s,
 		channelID:         i.ChannelID,
 		meetingInProgress: false,
 		meetingMsgContent: &discordgo.MessageSend{Embeds: []*discordgo.MessageEmbed{{Type: discordgo.EmbedTypeRich,
 			Description: "Loading..."}}},
 		meetingStatusMsg: nil,
-		restartCommand:   restartCommandBuilder.String(),
 		o:                o,
 	}
 	if watch.flags.Silent {
@@ -134,13 +104,23 @@ func (w *watchProcess) listen() {
 		if updateData.EventType == types.SYSTEM_SHUTDOWN {
 			shutdown = true
 			w.meetingMsgContent.Embeds[0].Description = "**Status Unknown**\nThe watch stopped due to bot shutdown." +
-				" Please use the following command to restart when available:\n" + w.restartCommand
+				" Please use the following command to restart when available:\n" + w.flags.RestartCommand
 			w.meetingMsgContent.Components = []discordgo.MessageComponent{}
 			break
-		} else if updateData.EventType == types.WATCH_CANCELED {
+		}
+		if updateData.EventType == types.WATCH_CANCELED {
 			w.meetingMsgContent.Embeds[0].Description = "**Status Unknown**\nThe watch on this meeting was canceled."
 			w.meetingMsgContent.Components = []discordgo.MessageComponent{}
 			break
+		}
+		if updateData.EventType == types.UPDATE_FLAGS {
+			w.flags = updateData.Flags
+			if w.flags.Silent {
+				w.meetingMsgContent.Flags = discordgo.MessageFlagsSuppressNotifications
+			} else {
+				w.meetingMsgContent.Flags = 0
+			}
+			continue
 		}
 
 		// Remove old meeting message if needed (full history messages will be nil if not in progress)

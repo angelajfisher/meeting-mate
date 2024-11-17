@@ -40,6 +40,8 @@ func Run(bc *Config) error {
 			interactions.HandleCancel(s, i, bc.Orchestrator, interactions.ParseOptions(data.Options))
 		case interactions.STATUS_COMMAND:
 			interactions.HandleStatus(s, i, bc.Orchestrator)
+		case interactions.UPDATE_COMMAND:
+			interactions.HandleUpdate(s, i, bc.Orchestrator, interactions.ParseOptions(data.Options))
 		}
 	})
 
@@ -47,8 +49,7 @@ func Run(bc *Config) error {
 		log.Println("Logged in as", r.User.String())
 	})
 
-	interacts := interactions.InteractionList()
-	_, err = bc.session.ApplicationCommandBulkOverwrite(bc.AppID, "", interacts)
+	_, err = bc.session.ApplicationCommandBulkOverwrite(bc.AppID, "", interactions.InteractionList())
 	if err != nil {
 		return fmt.Errorf("could not register bot commands: %w", err)
 	}

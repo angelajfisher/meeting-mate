@@ -15,13 +15,15 @@ type UpdateData struct {
 	Participants      string
 	TotalParticipants int
 	MeetingDuration   string
+	Flags             FeatureFlags
 }
 
 type FeatureFlags struct {
-	Silent       bool   // Whether messages should be sent with the @silent flag
-	JoinLink     string // User-supplied link for others to join the meeting
-	Summaries    bool   // Whether meetings stats should be sent at the end of a meeting
-	HistoryLevel string // How many messages to send / delete as meetings start and end
+	Silent         bool   // Whether messages should be sent with the @silent flag
+	JoinLink       string // User-supplied link for others to join the meeting
+	Summaries      bool   // Whether meetings stats should be sent at the end of a meeting
+	HistoryLevel   string // How many messages to send / delete as meetings start and end
+	RestartCommand string // The command to restart this watch with the same flags
 }
 
 const (
@@ -34,6 +36,7 @@ const (
 	// System notifications
 	WATCH_CANCELED  = "canceled"
 	SYSTEM_SHUTDOWN = "shutdown"
+	UPDATE_FLAGS    = "update"
 
 	// History level options
 	FULL_HISTORY    = "Full"    // No old meeting messages are removed

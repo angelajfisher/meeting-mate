@@ -70,6 +70,15 @@ func (o Orchestrator) UpdateMeeting(meetingID string, data types.MeetingData) {
 	}
 }
 
+// Changes the selected options for a given watch
+func (o Orchestrator) UpdateFlags(guildID string, meetingID string, flags types.FeatureFlags) {
+	update := types.UpdateData{
+		EventType: types.UPDATE_FLAGS,
+		Flags:     flags,
+	}
+	o.dataListeners.GetListener(guildID, meetingID) <- update
+}
+
 // Informs a watch process of a cancellation request so it can gracefully stop
 func (o Orchestrator) CancelWatch(guildID string, meetingID string) {
 	o.dataListeners.Remove(guildID, meetingID, types.UpdateData{EventType: types.WATCH_CANCELED})

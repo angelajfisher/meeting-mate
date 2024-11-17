@@ -17,7 +17,7 @@ func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, o orches
 	)
 
 	// Check for a meeting ID provided with the command
-	if v, ok := opts["meeting_id"]; ok && v.StringValue() != "" {
+	if v, ok := opts[MEETING_OPT]; ok && v.StringValue() != "" {
 		meetingID = v.StringValue()
 		log.Printf("%s in %s: /cancel ID %s", i.Member.User, i.GuildID, meetingID)
 	} else {

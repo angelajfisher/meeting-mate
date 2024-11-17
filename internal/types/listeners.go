@@ -75,6 +75,13 @@ func (dl *DataListeners) GetAllListeners() []chan UpdateData {
 	return allListeners
 }
 
+func (dl *DataListeners) GetListener(guildID string, meetingID string) chan UpdateData {
+	dl.mu.RLock()
+	defer dl.mu.RUnlock()
+
+	return dl.listeners[meetingID][guildID]
+}
+
 func (dl *DataListeners) exists(guildID string, meetingID string) bool {
 	dl.mu.RLock()
 	defer dl.mu.RUnlock()
