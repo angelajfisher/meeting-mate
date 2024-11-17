@@ -3,7 +3,7 @@
 
 Connect your Discord server with your Zoom meetings!
 
-![Running Go 1.22](https://img.shields.io/badge/Go-1.22-007d9c.svg?style=flat-square) [![Zoom API Events v1.0.0](https://img.shields.io/badge/Zoom%20API%20Events-v1.0.0-0B5CFF.svg?style=flat-square)](https://developers.zoom.us/docs/api/rest/reference/zoom-api/events/) [![Discord API v9](https://img.shields.io/badge/Discord%20API-v9-5865F2.svg?style=flat-square)](https://discord.com/developers/docs/reference#api-versioning) ![Current release: v1.1](https://img.shields.io/badge/Release-v1.1-green.svg?style=flat-square) [![License](https://img.shields.io/badge/License-Apache_2.0-f69923.svg?style=flat-square)](https://opensource.org/licenses/Apache-2.0)
+![Running Go 1.22](https://img.shields.io/badge/Go-1.22-007d9c.svg?style=flat-square) [![Zoom API Events v1.0.0](https://img.shields.io/badge/Zoom%20API%20Events-v1.0.0-0B5CFF.svg?style=flat-square)](https://developers.zoom.us/docs/api/meetings/events) [![Discord API v9](https://img.shields.io/badge/Discord%20API-v9-5865F2.svg?style=flat-square)](https://discord.com/developers/docs/reference#api-versioning) ![Current release: v1.2](https://img.shields.io/badge/Release-v1.2-green.svg?style=flat-square) [![License](https://img.shields.io/badge/License-Apache_2.0-f69923.svg?style=flat-square)](https://opensource.org/licenses/Apache-2.0)
 
 </div>
 
@@ -36,16 +36,18 @@ When the bot is active and commanded to watch a given Zoom meeting, it will post
 
 ## Getting Started
 
-Due to the security restrictions on the Zoom API, Meeting Mate can only connect to one Zoom account at a time. Therefore, to use the bot with your own meetings and servers, you must configure your own copy of Meeting Mate to connect to your accounts.
+Due to the security restrictions on the Zoom API, Meeting Mate can only connect to one Zoom account at a time. Therefore, to use the bot with your own meetings and servers, you must configure your own instance of Meeting Mate to connect to your accounts.
 
 ### Requirements
 
-To set up your own working Meeting Mate, you must have the following in place before beginning the installation:
+To set up your own Meeting Mate, you must have the following in place before beginning the installation:
 
 1. A system that can satisfy Zoom's [webhook endpoint requirements](https://developers.zoom.us/docs/api/rest/webhook-reference/#webhook-endpoint-requirements)
 2. Admin access to the Zoom account hosting the meetings you wish to sync with Discord
 3. Ability to create a [webhook-only app](https://developers.zoom.us/docs/api/rest/webhook-only-app/) for the relevant Zoom account in the Zoom App Marketplace
 4. Ability to create a [Discord app](https://discord.com/developers/docs/quick-start/getting-started#step-1-creating-an-app) to provide the bot with credentials
+
+If you don't already have a host that satisfies Zoom's requirements, I recommend setting up a VPS for your Meeting Mate app. [Dreams of Code](https://www.youtube.com/@dreamsofcode) has [a good tutorial](https://www.youtube.com/watch?v=F-9KWQByeU0) for this.
 
 <div align="right"><a href="#table-of-contents">↑ Back to top ↑</a></div>
 
@@ -58,7 +60,7 @@ Meeting Mate requires some environment variables in order to function. Two optio
 
 #### Required Variables
 
-> This list can also be found in the provided `.env.sample` file for quick access
+> This list can also be found in the provided `.env.sample` file for ease of reference
 
 - `ZOOM_TOKEN`: The secret token from your Zoom app
 - `BOT_TOKEN`: The token key for your Discord bot
@@ -82,7 +84,7 @@ When running in production, the following variables are also required:
 
 #### Installing from Source
 
-To install Meeting Mate from source, you will need [Go 1.22](https://go.dev/doc/install) or higher installed on your system.
+To install Meeting Mate from its source, you will need [Go 1.22](https://go.dev/doc/install) or higher installed on your system.
 
 Before building, consider the required environment variables and decide whether to include them in the environment or through a `.env` file. It is strongly recommended to include them in the environment at build time for increased security; however, they can be overwritten by a supplied `.env` file at runtime if needed.
 
@@ -100,7 +102,7 @@ Once it's successfully compiled, run the binary with `./meeting-mate` if built o
 
 ### Usage
 
-Meeting Mate has been designed with simplicity in mind for a smoother, more reliable operation. Simply add the bot to your Discord server, then begin watching a Zoom meeting with the command `/watch meeting_ID: <your Zoom meeting ID>` in your channel of choice. The bot will take care of the rest! Until it receives the `/cancel` command, it will continuously listen to Zoom webhooks and provide real-time status updates in Discord for the requested meeting.
+Meeting Mate has been designed with simplicity in mind for a smoother, more reliable operation. Simply add the bot to your Discord server, then begin watching a Zoom meeting with the command `/watch meeting_ID: <your Zoom meeting ID>` in your channel of choice. The bot will take care of the rest! Until it receives the `/cancel` command or the bot shuts down, it will continuously listen to Zoom webhooks and provide real-time status updates in Discord for the requested meeting(s).
 
 <div align="right"><a href="#table-of-contents">↑ Back to top ↑</a></div>
 
@@ -114,13 +116,13 @@ Meeting Mate has been designed with simplicity in mind for a smoother, more reli
 
 ## How It Works
 
-There are two parts to Meeting Mate: the Zoom webhook listener and the integration with the Discord API. These two processes work together to collect, parse, and distribute the Zoom meeting data.
+There are two main parts to Meeting Mate: the Zoom webhook listener and the integration with the Discord API. These two processes work together to collect, parse, and distribute the Zoom meeting data, united by an orchestrator.
 
 ### Zoom Webhook Listener
 
 The webhook listener is a simple HTTP server that accepts JSON data from Zoom's servers.
 
-When a meeting watch is active, the server will take incoming meeting data and send the relevant updates to the bot process to be parsed into a Discord message. If there is no meeting watch active, it will toss the incoming data.
+When a meeting watch is active, the server will take incoming meeting data and send the relevant updates to the orchestrator to be formatted into data used by the bot process to send a Discord message. If there is no meeting watch active, it will toss the incoming data.
 
 The Zoom API documentation for meeting webhooks can be referenced [here](https://developers.zoom.us/docs/api/rest/reference/zoom-api/events/).
 
