@@ -38,7 +38,7 @@ const (
 	SYSTEM_SHUTDOWN = "shutdown"
 	UPDATE_FLAGS    = "update"
 
-	// History level options
+	// History level options -- MUST MATCH DATABASE SCHEMA
 	FULL_HISTORY    = "Full"    // No old meeting messages are removed
 	PARTIAL_HISTORY = "Partial" // Keep the old meeting message only if it's been buried by conversation
 	MINIMAL_HISTORY = "Minimal" // Do not keep any old meeting messages
