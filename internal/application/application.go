@@ -8,9 +8,11 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"github.com/angelajfisher/meeting-mate/internal/bot"
+	"github.com/angelajfisher/meeting-mate/internal/db"
 	"github.com/angelajfisher/meeting-mate/internal/orchestrator"
 	"github.com/angelajfisher/meeting-mate/internal/server"
 	"github.com/joho/godotenv"
@@ -69,7 +71,12 @@ func validateEnv(dev bool) (*bot.Config, *server.Config, error) {
 	webhookPort := flag.String(
 		"webhookPort",
 		":12345",
-		"port at which the webhook server will listen for incoming hooks - default :12345",
+		"port at which the webhook server will listen for incoming hooks",
+	)
+	dbPathFlag := flag.String(
+		"dbPath",
+		"./.meetingmate-db.sqlite3",
+		"preferred location of the database file",
 	)
 	flag.Parse()
 
@@ -83,10 +90,15 @@ func validateEnv(dev bool) (*bot.Config, *server.Config, error) {
 	if *devMode {
 		fmt.Println("WARN: Initializing Meeting Mate in DEVELOPMENT mode")
 	} else if os.Getenv("SSL_CERT") == "" || os.Getenv("SSL_KEY") == "" {
-		return nil, nil, errors.New("required SSL_CERT and/or SSL_KEY filepaths missing from environment")
+		return nil, nil, errors.New("required SSL_CERT and/or SSL_KEY filepaths missing from environment") //todo: suggest env file
 	}
 
-	o := orchestrator.NewOrchestrator()
+	dbPool, err := setupDatabase(*dbPathFlag)
+	if err != nil {
+		return nil, nil, fmt.Errorf("could not initialize database: %w", err)
+	}
+
+	o := orchestrator.NewOrchestrator(dbPool)
 	botConf := bot.Config{
 		BotToken:     os.Getenv("BOT_TOKEN"),
 		AppID:        os.Getenv("APP_ID"),
@@ -108,4 +120,25 @@ func validateEnv(dev bool) (*bot.Config, *server.Config, error) {
 	}
 
 	return &botConf, &serverConf, nil
+}
+
+func setupDatabase(dbPath string) (db.DatabasePool, error) {
+	cleanedDbPath := filepath.Clean(dbPath)
+	log.Println("Initializing database at", cleanedDbPath)
+
+	err := db.InitializeDatabase(cleanedDbPath)
+	if err != nil {
+		return db.DatabasePool{}, fmt.Errorf("could not create database: %w", err)
+	}
+	err = db.MakeMigrations(cleanedDbPath)
+	if err != nil {
+		return db.DatabasePool{}, fmt.Errorf("could not make database migrations: %w", err)
+	}
+
+	dbPool, err := db.NewDatabasePool(cleanedDbPath)
+	if err != nil {
+		err = fmt.Errorf("could not create database pool: %w", err)
+	}
+
+	return dbPool, err
 }
