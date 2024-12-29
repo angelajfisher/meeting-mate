@@ -4,20 +4,24 @@ import (
 	"log"
 	"time"
 
+	"github.com/angelajfisher/meeting-mate/internal/db"
 	"github.com/angelajfisher/meeting-mate/internal/types"
 )
 
 type Orchestrator struct {
+	Database       db.DatabasePool
 	meetingWatches *types.Bimap // Bidirectional map tracking ongoing watches categorized by meetingID and by guildID
 	dataListeners  *types.DataListeners
 	allMeetings    *types.MeetingStore
 }
 
-func NewOrchestrator() Orchestrator {
+// Creates a new orchestrator to manage data across the program.
+func NewOrchestrator(dbPool db.DatabasePool) Orchestrator {
 	return Orchestrator{
 		meetingWatches: types.NewBimap(),
 		dataListeners:  types.NewDataListeners(),
 		allMeetings:    types.NewMeetingStore(),
+		Database:       dbPool,
 	}
 }
 
