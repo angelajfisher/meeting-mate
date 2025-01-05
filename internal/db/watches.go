@@ -51,3 +51,22 @@ func (db DatabasePool) SaveWatch(watch WatchData) {
 		log.Println("error: could not save watch to database: %w", err)
 	}
 }
+
+func (db DatabasePool) DeleteWatch(guildID string, meetingID string) {
+	conn, err := db.pool.Take(context.TODO())
+	if err != nil {
+		log.Println("error: could not get new connection from database: %w", err)
+	}
+	defer conn.Close()
+
+	err = sqlitex.Execute(conn, `
+		DELETE FROM watches
+		WHERE meeting_id = ?
+			AND server_id = ?;`,
+		&sqlitex.ExecOptions{
+			Args: []any{meetingID, guildID},
+		})
+	if err != nil {
+		log.Println("error: could not delete watch from database: %w", err)
+	}
+}

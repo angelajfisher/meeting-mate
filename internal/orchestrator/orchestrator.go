@@ -85,6 +85,7 @@ func (o Orchestrator) UpdateFlags(guildID string, meetingID string, flags types.
 
 // Informs a watch process of a cancellation request so it can gracefully stop
 func (o Orchestrator) CancelWatch(guildID string, meetingID string) {
+	o.Database.DeleteWatch(guildID, meetingID)
 	o.dataListeners.Remove(guildID, meetingID, types.UpdateData{EventType: types.WATCH_CANCELED})
 	o.meetingWatches.Remove(guildID, meetingID)
 }
