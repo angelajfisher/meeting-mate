@@ -103,6 +103,37 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, o orchest
 	watch.listen()
 }
 
+// Restores an ongoing watch by initializing a watch process with saved data
+func LoadSavedWatch(
+	s *discordgo.Session,
+	o orchestrator.Orchestrator,
+	watchData db.WatchData,
+) {
+	// Initialize the watch process
+	watch := watchProcess{
+		meetingID:         watchData.MeetingID,
+		guildID:           watchData.GuildID,
+		flags:             watchData.Options,
+		session:           s,
+		channelID:         watchData.ChannelID,
+		meetingInProgress: false,
+		meetingMsgContent: &discordgo.MessageSend{Embeds: []*discordgo.MessageEmbed{{
+			Type:        discordgo.EmbedTypeRich,
+			Description: "Loading...",
+		}}},
+		meetingStatusMsg: nil,
+		o:                o,
+	}
+	if watch.flags.Silent {
+		watch.meetingMsgContent.Flags = discordgo.MessageFlagsSuppressNotifications
+	}
+
+	watch.listen()
+}
+
+// Starts a goroutine to listen to Zoom meeting changes and update the meeting message accordingly
+//
+//nolint:gocognit
 func (w *watchProcess) listen() {
 	var (
 		err      error

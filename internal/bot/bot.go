@@ -3,6 +3,7 @@ package bot
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/angelajfisher/meeting-mate/internal/bot/interactions"
@@ -63,6 +64,26 @@ func Run(bc *Config) error {
 		log.Printf("could not set custom status: %s", err)
 	}
 
+	//
+	// Restart previously ongoing watches from last run
+
+	loadedWatches := bc.Orchestrator.Database.GetAllWatches()
+
+	// Keep track of the watches happening in each channel so a restart announcement can be sent
+	channelWatches := make(map[string][]string) // channelID: []meetingIDs
+
+	// Start the watch process for each watch loaded from the database
+	for _, watch := range loadedWatches {
+		go interactions.LoadSavedWatch(bc.session, bc.Orchestrator, watch)
+		channelWatches[watch.ChannelID] = append(channelWatches[watch.ChannelID], watch.MeetingID)
+	}
+	log.Println("Loaded", len(loadedWatches), "watches from database")
+
+	// Notify every channel of the restarted watches
+	for channelID, meetingIDs := range channelWatches {
+		notifyOfRestart(bc.session, meetingIDs, channelID)
+	}
+
 	return nil
 }
 
@@ -86,4 +107,36 @@ func Stop(bc *Config) error {
 
 	fmt.Print("Done!\n")
 	return nil
+}
+
+// Sends a message to the given channel notifying of the program's (& their watches') restart
+func notifyOfRestart(s *discordgo.Session, meetingIDs []string, channelID string) {
+	if len(meetingIDs) == 0 {
+		return
+	}
+
+	meetingList := new(strings.Builder)
+	meetingList.WriteString(
+		"Data for in-progress meetings has been lost, but future updates should come through as usual.\n\n",
+	)
+
+	if len(meetingIDs) == 1 {
+		meetingList.WriteString("This channel's watch on meeting ID `" + meetingIDs[0] + "` has been automatically resumed.")
+	} else {
+		meetingList.WriteString("This channel's watches on the following meeting IDs have been automatically resumed:")
+		for _, meetingID := range meetingIDs {
+			meetingList.WriteString("\n- `" + meetingID + "`")
+		}
+	}
+
+	_, err := s.ChannelMessageSendComplex(channelID, &discordgo.MessageSend{
+		Embeds: []*discordgo.MessageEmbed{{
+			Title:       "Meeting Mate Restarted!",
+			Description: meetingList.String(),
+		}},
+		Flags: discordgo.MessageFlagsSuppressNotifications,
+	})
+	if err != nil {
+		log.Printf("could not send restart message to channel ID %s: %s", channelID, err)
+	}
 }
