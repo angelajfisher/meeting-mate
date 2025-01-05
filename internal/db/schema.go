@@ -40,11 +40,6 @@ func InitializeDatabase(path string) error {
 // Updates database schema as needed
 func MakeMigrations(path string) error {
 	schema := []string{`
-		CREATE TABLE IF NOT EXISTS meetings (
-			meeting_id TEXT PRIMARY KEY,
-			name TEXT
-		);
-	`, `
 		CREATE TABLE IF NOT EXISTS history_types (
 			type TEXT PRIMARY KEY
 		);
@@ -65,8 +60,6 @@ func MakeMigrations(path string) error {
 			command TEXT NOT NULL,
 			link TEXT,
 			PRIMARY KEY(meeting_id, server_id),
-			FOREIGN KEY (meeting_id)
-				REFERENCES meetings (meeting_id),
 			FOREIGN KEY (history_type)
 				REFERENCES history_types (type)
 		);
@@ -95,7 +88,9 @@ func MakeMigrations(path string) error {
 	defer pool.Close()
 
 	// Migrations are blocking, so use a new connection as an indicator for their completion before closing the pool
-	conn, err := pool.Get(context.TODO())
+	ctx, cancel := context.WithTimeout(context.Background(), connTimeout)
+	defer cancel()
+	conn, err := pool.Get(ctx)
 	if err != nil {
 		return fmt.Errorf("could not open connection to database: %w", err)
 	}

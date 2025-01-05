@@ -17,11 +17,13 @@ type WatchData struct {
 }
 
 func (db DatabasePool) GetAllWatches() []WatchData {
-	conn, err := db.pool.Take(context.TODO())
+	ctx, cancel := context.WithTimeout(context.Background(), connTimeout)
+	defer cancel()
+	conn, err := db.pool.Take(ctx)
 	if err != nil {
 		log.Println("error: could not get new connection from database: %w", err)
 	}
-	defer conn.Close()
+	defer db.pool.Put(conn)
 
 	var watches []WatchData
 	err = sqlitex.Execute(conn, `
@@ -61,11 +63,13 @@ func (db DatabasePool) GetAllWatches() []WatchData {
 }
 
 func (db DatabasePool) SaveWatch(watch WatchData) {
-	conn, err := db.pool.Take(context.TODO())
+	ctx, cancel := context.WithTimeout(context.Background(), connTimeout)
+	defer cancel()
+	conn, err := db.pool.Take(ctx)
 	if err != nil {
 		log.Println("error: could not get new connection from database: %w", err)
 	}
-	defer conn.Close()
+	defer db.pool.Put(conn)
 
 	err = sqlitex.Execute(conn, `
 		INSERT INTO watches (
@@ -98,11 +102,13 @@ func (db DatabasePool) SaveWatch(watch WatchData) {
 }
 
 func (db DatabasePool) DeleteWatch(guildID string, meetingID string) {
-	conn, err := db.pool.Take(context.TODO())
+	ctx, cancel := context.WithTimeout(context.Background(), connTimeout)
+	defer cancel()
+	conn, err := db.pool.Take(ctx)
 	if err != nil {
 		log.Println("error: could not get new connection from database: %w", err)
 	}
-	defer conn.Close()
+	defer db.pool.Put(conn)
 
 	err = sqlitex.Execute(conn, `
 		DELETE FROM watches
