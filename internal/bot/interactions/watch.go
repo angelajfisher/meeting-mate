@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/url"
 
+	"github.com/angelajfisher/meeting-mate/internal/db"
 	"github.com/angelajfisher/meeting-mate/internal/orchestrator"
 	"github.com/angelajfisher/meeting-mate/internal/types"
 	"github.com/bwmarrin/discordgo"
@@ -92,6 +93,13 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, o orchest
 		watch.meetingMsgContent.Flags = discordgo.MessageFlagsSuppressNotifications
 	}
 
+	// Store watch details in the database in order to restore the state upon a restart
+	o.Database.SaveWatch(db.WatchData{
+		MeetingID: watch.meetingID,
+		GuildID:   watch.guildID,
+		ChannelID: watch.channelID,
+		Options:   watch.flags,
+	})
 	watch.listen()
 }
 
