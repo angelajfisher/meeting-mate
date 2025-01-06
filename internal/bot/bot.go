@@ -67,6 +67,9 @@ func Run(bc *Config) error {
 	//
 	// Restart previously ongoing watches from last run
 
+	if !bc.Orchestrator.Database.Enabled {
+		return nil
+	}
 	loadedWatches := bc.Orchestrator.Database.GetAllWatches()
 
 	// Keep track of the watches happening in each channel so a restart announcement can be sent

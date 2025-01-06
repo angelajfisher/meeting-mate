@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 
 	"github.com/angelajfisher/meeting-mate/internal/db"
 	"github.com/angelajfisher/meeting-mate/internal/orchestrator"
@@ -39,7 +40,8 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, o orchest
 	// Check if the meeting ID is currently being watched
 	if o.IsOngoingWatch(i.GuildID, newMeetingID) {
 		responseMsg.msg = "Watch on meeting ID `" + newMeetingID +
-			"` is already ongoing. It will continue indefinitely unless `/cancel`ed."
+			"` is already ongoing. It will continue indefinitely unless `/cancel`ed." +
+			"\nIf you'd like to change the settings on this watch, try `/update `" + newMeetingID + "`!"
 		responseMsg.flags = discordgo.MessageFlagsEphemeral
 		responseMsg.terminate = true
 	} else if newMeetingID == "" {
@@ -141,9 +143,20 @@ func (w *watchProcess) listen() {
 	)
 	for updateData := range w.o.StartWatch(w.guildID, w.meetingID) {
 		if updateData.EventType == types.SYSTEM_SHUTDOWN {
+			messageBuilder := new(strings.Builder)
+			messageBuilder.WriteString("**Status Unknown**\nThe watch stopped due to bot shutdown.")
+			if w.o.Database.Enabled {
+				messageBuilder.WriteString(
+					" No action is needed on your part — the watch should automatically resume when Meeting Mate returns.",
+				)
+			} else {
+				messageBuilder.WriteString(
+					" Please use the following command to restart when available:\n" + w.flags.RestartCommand,
+				)
+			}
 			shutdown = true
-			w.meetingMsgContent.Embeds[0].Description = "**Status Unknown**\nThe watch stopped due to bot shutdown." +
-				" Please use the following command to restart when available:\n" + w.flags.RestartCommand
+			w.meetingMsgContent.Embeds[0].Title = w.o.GetMeetingName(w.meetingID)
+			w.meetingMsgContent.Embeds[0].Description = messageBuilder.String()
 			w.meetingMsgContent.Components = []discordgo.MessageComponent{}
 			break
 		}

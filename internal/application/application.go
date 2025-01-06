@@ -86,6 +86,11 @@ func validateEnv(dev bool) (*bot.Config, *server.Config, error) {
 		":12345",
 		"port at which the webhook server will listen for incoming hooks",
 	)
+	dbDisabled := flag.Bool(
+		"dbDisabled",
+		false,
+		"disable the use of a sqlite3 database in favor of in-memory storage, which is lost on shutdown",
+	)
 	dbPathFlag := flag.String(
 		"dbPath",
 		"./.meetingmate-db.sqlite3",
@@ -122,9 +127,16 @@ func validateEnv(dev bool) (*bot.Config, *server.Config, error) {
 		return nil, nil, errors.New("required SSL_CERT and/or SSL_KEY filepaths missing from environment")
 	}
 
-	dbPool, err := setupDatabase(*dbPathFlag)
-	if err != nil {
-		return nil, nil, fmt.Errorf("could not initialize database: %w", err)
+	var dbPool db.DatabasePool
+	if *dbDisabled {
+		fmt.Println("Database disabled — skipping initialization")
+		dbPool = db.DatabasePool{Enabled: false}
+	} else {
+		var dbErr error
+		dbPool, dbErr = setupDatabase(*dbPathFlag)
+		if dbErr != nil {
+			return nil, nil, fmt.Errorf("could not initialize database: %w", dbErr)
+		}
 	}
 
 	o := orchestrator.NewOrchestrator(dbPool)

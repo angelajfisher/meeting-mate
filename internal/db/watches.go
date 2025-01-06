@@ -17,6 +17,10 @@ type WatchData struct {
 }
 
 func (db DatabasePool) GetAllWatches() []WatchData {
+	if !db.Enabled {
+		return []WatchData{}
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), connTimeout)
 	defer cancel()
 	conn, err := db.pool.Take(ctx)
@@ -63,6 +67,10 @@ func (db DatabasePool) GetAllWatches() []WatchData {
 }
 
 func (db DatabasePool) SaveWatch(watch WatchData) {
+	if !db.Enabled {
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), connTimeout)
 	defer cancel()
 	conn, err := db.pool.Take(ctx)
@@ -102,6 +110,10 @@ func (db DatabasePool) SaveWatch(watch WatchData) {
 }
 
 func (db DatabasePool) DeleteWatch(guildID string, meetingID string) {
+	if !db.Enabled {
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), connTimeout)
 	defer cancel()
 	conn, err := db.pool.Take(ctx)

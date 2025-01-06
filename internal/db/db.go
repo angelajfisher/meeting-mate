@@ -11,6 +11,7 @@ import (
 const connTimeout = 5 * time.Second
 
 type DatabasePool struct {
+	Enabled  bool   // whether the program should use an external database
 	location string // cleaned filepath to db
 	pool     *sqlitex.Pool
 }
@@ -25,6 +26,7 @@ func NewDatabasePool(cleanedDbPath string) (DatabasePool, error) {
 	}
 
 	return DatabasePool{
+			Enabled:  true,
 			location: cleanedDbPath,
 			pool:     pool,
 		},
