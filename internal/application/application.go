@@ -19,10 +19,23 @@ import (
 	"github.com/oklog/run"
 )
 
+const (
+	appVersion    = "1.3"
+	fatalErrorMsg = "\nfatal: %v\n\nA fatal error occurred. Meeting Mate shut down.\n"
+	separator     = "\n——————————————————————————————————————\n\n"
+)
+
 func Initialize(devMode bool) {
+	fmt.Print(
+		"\n┬┴┬┴┤･ω･)ﾉ├┬┴┬┴\n",
+		"Hi, Welcome to Meeting Mate v"+appVersion+"!\n\n",
+		"For help getting started, check out the documentation at:\n",
+		"https://www.angelajfisher.com/projects/meeting-mate/docs\n",
+	)
+
 	botConfig, serverConfig, err := validateEnv(devMode)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		fmt.Fprintf(os.Stderr, fatalErrorMsg, err)
 		os.Exit(1)
 	}
 
@@ -51,13 +64,13 @@ func Initialize(devMode bool) {
 
 	err = bot.Run(botConfig)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "fatal error: %s", err)
+		fmt.Fprintf(os.Stderr, fatalErrorMsg, err)
 		os.Exit(1)
 	}
 
 	err = g.Run()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "fatal error: %s", err)
+		fmt.Fprintf(os.Stderr, fatalErrorMsg, err)
 		os.Exit(1)
 	}
 
@@ -80,17 +93,33 @@ func validateEnv(dev bool) (*bot.Config, *server.Config, error) {
 	)
 	flag.Parse()
 
+	fmt.Println(separator + "Starting setup...\n\nLoading environment variables")
+	defer fmt.Print(separator)
+
 	if *envPath != "" {
+		fmt.Println(
+			"Loading variables from '",
+			*envPath,
+			"' — note that these will not override any existing environment variables",
+		)
 		err := godotenv.Load(*envPath)
 		if err != nil {
 			return nil, nil, errors.New("could not load .env file at provided path")
 		}
+	} else {
+		fmt.Println("note: no .env file provided")
 	}
 
 	if *devMode {
-		fmt.Println("WARN: Initializing Meeting Mate in DEVELOPMENT mode")
+		fmt.Print(
+			"\nStarting in DEVELOPMENT mode:\n",
+			"\t- Server running insecurely — HTTP without TLS\n",
+			"\t- Zoom will NOT send webhook data in this mode\n",
+			"\t- Meeting Mate WILL still connect to Discord\n",
+			"This mode is for testing purposes only. The bot will not work as intended.\n",
+		)
 	} else if os.Getenv("SSL_CERT") == "" || os.Getenv("SSL_KEY") == "" {
-		return nil, nil, errors.New("required SSL_CERT and/or SSL_KEY filepaths missing from environment") //todo: suggest env file
+		return nil, nil, errors.New("required SSL_CERT and/or SSL_KEY filepaths missing from environment")
 	}
 
 	dbPool, err := setupDatabase(*dbPathFlag)
@@ -119,12 +148,14 @@ func validateEnv(dev bool) (*bot.Config, *server.Config, error) {
 		)
 	}
 
+	fmt.Println("\nSetup complete! Time to get the party started!")
+
 	return &botConf, &serverConf, nil
 }
 
 func setupDatabase(dbPath string) (db.DatabasePool, error) {
 	cleanedDbPath := filepath.Clean(dbPath)
-	log.Println("Initializing database at", cleanedDbPath)
+	fmt.Println("\nInitializing database at", cleanedDbPath)
 
 	err := db.InitializeDatabase(cleanedDbPath)
 	if err != nil {

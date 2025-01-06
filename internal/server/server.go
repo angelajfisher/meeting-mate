@@ -40,7 +40,7 @@ func Start(ss *Config) error {
 		ReadHeaderTimeout: 2 * time.Second,
 	}
 
-	log.Println("Zoom webhook listener starting on", ss.Port)
+	log.Println("Starting Zoom webhook listener on", ss.Port)
 
 	var err error
 	if ss.DevMode {
