@@ -102,7 +102,7 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, o orchest
 		ChannelID: watch.channelID,
 		Options:   watch.flags,
 	})
-	watch.listen()
+	watch.listen("")
 }
 
 // Restores an ongoing watch by initializing a watch process with saved data
@@ -130,18 +130,18 @@ func LoadSavedWatch(
 		watch.meetingMsgContent.Flags = discordgo.MessageFlagsSuppressNotifications
 	}
 
-	watch.listen()
+	watch.listen(watchData.MeetingTopic)
 }
 
 // Starts a goroutine to listen to Zoom meeting changes and update the meeting message accordingly
 //
 //nolint:gocognit
-func (w *watchProcess) listen() {
+func (w *watchProcess) listen(meetingTopic string) {
 	var (
 		err      error
 		shutdown = false
 	)
-	for updateData := range w.o.StartWatch(w.guildID, w.meetingID) {
+	for updateData := range w.o.StartWatch(w.guildID, w.meetingID, meetingTopic) {
 		if updateData.EventType == types.SYSTEM_SHUTDOWN {
 			messageBuilder := new(strings.Builder)
 			messageBuilder.WriteString("**Status Unknown**\nThe watch stopped due to bot shutdown.")
@@ -155,7 +155,11 @@ func (w *watchProcess) listen() {
 				)
 			}
 			shutdown = true
-			w.meetingMsgContent.Embeds[0].Title = w.o.GetMeetingName(w.meetingID)
+			meetingName := w.o.GetMeetingName(w.meetingID)
+			if meetingName == "" {
+				meetingName = "Meeting ID: " + w.meetingID
+			}
+			w.meetingMsgContent.Embeds[0].Title = meetingName
 			w.meetingMsgContent.Embeds[0].Description = messageBuilder.String()
 			w.meetingMsgContent.Components = []discordgo.MessageComponent{}
 			break

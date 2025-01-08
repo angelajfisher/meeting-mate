@@ -9,8 +9,6 @@ type Meeting struct {
 	Participants *ParticipantList
 	name         string
 	id           string
-	startTime    string // unused
-	endTime      string // unused
 }
 
 type MeetingStore struct {
@@ -24,16 +22,14 @@ func NewMeetingStore() *MeetingStore {
 	}
 }
 
-func (ms *MeetingStore) NewMeeting(id string) Meeting {
+func (ms *MeetingStore) NewMeeting(id string, meetingName string) Meeting {
 	if ms.exists(id) {
 		return ms.meetings[id]
 	}
 
 	newMeeting := Meeting{
 		id:           id,
-		name:         "",
-		startTime:    "",
-		endTime:      "",
+		name:         meetingName,
 		Participants: newParticipantList(),
 	}
 

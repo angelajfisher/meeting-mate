@@ -45,8 +45,8 @@ func (o Orchestrator) GetMeetingName(meetingID string) string {
 	return o.allMeetings.GetName(meetingID)
 }
 
-func (o Orchestrator) StartWatch(guildID string, meetingID string) <-chan types.UpdateData {
-	o.allMeetings.NewMeeting(meetingID)
+func (o Orchestrator) StartWatch(guildID string, meetingID string, meetingName string) <-chan types.UpdateData {
+	o.allMeetings.NewMeeting(meetingID, meetingName)
 	o.meetingWatches.Add(guildID, meetingID)
 	return o.dataListeners.Listen(guildID, meetingID)
 }

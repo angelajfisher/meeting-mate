@@ -54,6 +54,7 @@ func MakeMigrations(path string) error {
 			meeting_id TEXT NOT NULL,
 			server_id TEXT NOT NULL,
 			channel_id TEXT NOT NULL,
+			meeting_topic TEXT,
 			silent BOOL DEFAULT 1,
 			summary BOOL DEFAULT 1,
 			history_type TEXT NOT NULL DEFAULT 'Partial',

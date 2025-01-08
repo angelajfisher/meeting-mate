@@ -10,10 +10,11 @@ import (
 )
 
 type WatchData struct {
-	MeetingID string
-	GuildID   string
-	ChannelID string
-	Options   types.FeatureFlags
+	MeetingID    string
+	GuildID      string
+	ChannelID    string
+	MeetingTopic string
+	Options      types.FeatureFlags
 }
 
 func (db DatabasePool) GetAllWatches() []WatchData {
@@ -35,6 +36,7 @@ func (db DatabasePool) GetAllWatches() []WatchData {
 			meeting_id,
 			server_id,
 			channel_id,
+			meeting_topic,
 			silent,
 			summary,
 			history_type,
@@ -44,15 +46,16 @@ func (db DatabasePool) GetAllWatches() []WatchData {
 		&sqlitex.ExecOptions{
 			ResultFunc: func(stmt *sqlite.Stmt) error {
 				watchData := WatchData{
-					MeetingID: stmt.ColumnText(0),
-					GuildID:   stmt.ColumnText(1),
-					ChannelID: stmt.ColumnText(2),
+					MeetingID:    stmt.ColumnText(0),
+					GuildID:      stmt.ColumnText(1),
+					ChannelID:    stmt.ColumnText(2),
+					MeetingTopic: stmt.ColumnText(3),
 					Options: types.FeatureFlags{
-						Silent:         stmt.ColumnBool(3),
-						Summaries:      stmt.ColumnBool(4),
-						HistoryLevel:   stmt.ColumnText(5),
-						RestartCommand: stmt.ColumnText(6),
-						JoinLink:       stmt.ColumnText(7),
+						Silent:         stmt.ColumnBool(4),
+						Summaries:      stmt.ColumnBool(5),
+						HistoryLevel:   stmt.ColumnText(6),
+						RestartCommand: stmt.ColumnText(7),
+						JoinLink:       stmt.ColumnText(8),
 					},
 				}
 				watches = append(watches, watchData)
@@ -84,19 +87,21 @@ func (db DatabasePool) SaveWatch(watch WatchData) {
 			meeting_id,
 			server_id,
 			channel_id,
+			meeting_topic,
 			silent,
 			summary,
 			history_type,
 			command,
 			link
 		) VALUES (
-			?, ?, ?, ?, ?, ?, ?, ?
+			?, ?, ?, ?, ?, ?, ?, ?, ?
 		);`,
 		&sqlitex.ExecOptions{
 			Args: []any{
 				watch.MeetingID,
 				watch.GuildID,
 				watch.ChannelID,
+				watch.MeetingTopic,
 				watch.Options.Silent,
 				watch.Options.Summaries,
 				watch.Options.HistoryLevel,
