@@ -8,8 +8,12 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-const noWatch = "Nothing to cancel: there is no ongoing watch on this meeting."
+const (
+	CANCEL_ID = "meeting_cancel_selection_"
+	noWatch   = "Nothing to cancel: there is no ongoing watch on this meeting."
+)
 
+// Handles the initial `/cancel` command
 func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, o orchestrator.Orchestrator, opts optionMap) {
 	var (
 		err       error
@@ -24,7 +28,9 @@ func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, o orches
 		log.Printf("%s in %s: /cancel", i.Member.User, i.GuildID)
 	}
 
+	//
 	// ID provided path
+
 	if meetingID != "" || o.IsOngoingWatch(i.GuildID, meetingID) {
 		var (
 			response string
@@ -47,12 +53,14 @@ func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, o orches
 			},
 		})
 		if err != nil {
-			log.Printf("could not respond to interaction: %s", err)
+			log.Printf("HandleCancel-IDProvided: could not respond to interaction: %s", err)
 		}
 		return
 	}
 
+	//
 	// ID not provided path
+
 	// Format all ongoing meeting watches in this server into selectable options
 	guildWatches := []discordgo.SelectMenuOption{}
 	for _, meeting := range o.GetGuildMeetings(i.GuildID) {
@@ -76,7 +84,7 @@ func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, o orches
 			},
 		})
 		if err != nil {
-			log.Printf("could not respond to interaction: %s", err)
+			log.Printf("HandleCancel-NoWatches: could not respond to interaction: %s", err)
 		}
 		return
 	}
@@ -93,7 +101,7 @@ func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, o orches
 						Options:     guildWatches,
 						MinValues:   &minVals,
 						MaxValues:   len(guildWatches),
-						CustomID:    "meeting_cancel_selection" + i.Interaction.Member.User.ID,
+						CustomID:    CANCEL_ID + i.Interaction.Member.User.ID,
 						Placeholder: "Select meeting ID(s)",
 					},
 				}},
@@ -102,10 +110,11 @@ func HandleCancel(s *discordgo.Session, i *discordgo.InteractionCreate, o orches
 		},
 	})
 	if err != nil {
-		log.Printf("could not respond to interaction: %s", err)
+		log.Printf("HandleCancel-IDNotProvided: could not respond to interaction: %s", err)
 	}
 }
 
+// Handles the user response to the multiselect menu returned by /cancel when an ID is not provided
 func HandleCancelSelection(s *discordgo.Session, i *discordgo.InteractionCreate, o orchestrator.Orchestrator) {
 	data := i.MessageComponentData()
 
@@ -130,6 +139,6 @@ func HandleCancelSelection(s *discordgo.Session, i *discordgo.InteractionCreate,
 		},
 	})
 	if err != nil {
-		log.Printf("could not respond to interaction: %s", err)
+		log.Printf("HandleCancelSelections: could not respond to interaction: %s", err)
 	}
 }

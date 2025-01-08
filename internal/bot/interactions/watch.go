@@ -72,7 +72,7 @@ func HandleWatch(s *discordgo.Session, i *discordgo.InteractionCreate, o orchest
 			Flags:   responseMsg.flags,
 		},
 	}); err != nil {
-		log.Printf("could not respond to interaction: %s", err)
+		log.Printf("HandleWatch: could not respond to interaction: %s", err)
 	}
 	if responseMsg.terminate {
 		return
@@ -200,7 +200,7 @@ func (w *watchProcess) listen() {
 		if w.meetingStatusMsg == nil {
 			w.meetingStatusMsg, err = w.session.ChannelMessageSendComplex(w.channelID, w.meetingMsgContent)
 			if err != nil {
-				log.Printf("could not respond to interaction: %s", err)
+				log.Printf("WatchListener-Update: could not respond to interaction: %s", err)
 			}
 		}
 
@@ -236,12 +236,12 @@ func (w *watchProcess) listen() {
 			Components: &[]discordgo.MessageComponent{},
 		}
 		if _, err = w.session.ChannelMessageEditComplex(&updatedContent); err != nil {
-			log.Printf("could not respond to interaction: %s", err)
+			log.Printf("WatchListener-Stop: could not respond to interaction: %s", err)
 		}
 	} else if shutdown {
 		_, err = w.session.ChannelMessageSendComplex(w.channelID, w.meetingMsgContent)
 		if err != nil {
-			log.Printf("could not respond to interaction: %s", err)
+			log.Printf("WatchListener-Shutdown: could not respond to interaction: %s", err)
 		}
 	}
 }
@@ -277,7 +277,7 @@ func (w *watchProcess) updateMeetingMsg(updateData types.UpdateData) {
 		}
 		w.meetingStatusMsg, err = w.session.ChannelMessageEditComplex(&updatedContent)
 		if err != nil {
-			log.Printf("could not respond to interaction: %s\n", err)
+			log.Printf("UpdateMeetingMsg: could not respond to interaction: %s\n", err)
 		}
 		// Since all messages are kept with full history, remove reference to old message so it isn't removed
 		if !w.meetingInProgress && w.flags.HistoryLevel == types.FULL_HISTORY {

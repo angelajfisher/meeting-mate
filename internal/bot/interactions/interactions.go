@@ -64,34 +64,34 @@ func watchOptions() []*discordgo.ApplicationCommandOption {
 	return []*discordgo.ApplicationCommandOption{
 		{
 			Name:        MEETING_OPT,
-					Description: "ID of the Zoom meeting",
-					Type:        discordgo.ApplicationCommandOptionString,
-					Required:    true,
-				},
-				{
+			Description: "ID of the Zoom meeting",
+			Type:        discordgo.ApplicationCommandOptionString,
+			Required:    true,
+		},
+		{
 			Name:        SILENT_OPT,
-					Description: "Post status updates @silent-ly (default: true)",
-					Type:        discordgo.ApplicationCommandOptionBoolean,
-				},
-				{
+			Description: "Post status updates @silent-ly (default: true)",
+			Type:        discordgo.ApplicationCommandOptionBoolean,
+		},
+		{
 			Name:        LINK_OPT,
-					Description: "Link for others to join the meeting",
-					Type:        discordgo.ApplicationCommandOptionString,
-				},
-				{
+			Description: "Link for others to join the meeting",
+			Type:        discordgo.ApplicationCommandOptionString,
+		},
+		{
 			Name:        SUMMARY_OPT,
-					Description: "Display meeting stats after it ends (default: true)",
-					Type:        discordgo.ApplicationCommandOptionBoolean,
-				},
-				{
+			Description: "Display meeting stats after it ends (default: true)",
+			Type:        discordgo.ApplicationCommandOptionBoolean,
+		},
+		{
 			Name:        HISTORY_OPT,
-					Description: "How often new messages are sent / old ones deleted (default: Partial)",
-					Type:        discordgo.ApplicationCommandOptionString,
-					Choices: []*discordgo.ApplicationCommandOptionChoice{
-						{Name: types.FULL_HISTORY, Value: types.FULL_HISTORY},
-						{Name: types.PARTIAL_HISTORY, Value: types.PARTIAL_HISTORY},
-						{Name: types.MINIMAL_HISTORY, Value: types.MINIMAL_HISTORY},
-					},
+			Description: "How often new messages are sent / old ones deleted (default: Partial)",
+			Type:        discordgo.ApplicationCommandOptionString,
+			Choices: []*discordgo.ApplicationCommandOptionChoice{
+				{Name: types.FULL_HISTORY, Value: types.FULL_HISTORY},
+				{Name: types.PARTIAL_HISTORY, Value: types.PARTIAL_HISTORY},
+				{Name: types.MINIMAL_HISTORY, Value: types.MINIMAL_HISTORY},
+			},
 		},
 	}
 }

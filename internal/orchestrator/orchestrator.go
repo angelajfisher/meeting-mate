@@ -65,6 +65,9 @@ func (o Orchestrator) UpdateMeeting(meetingID string, data types.MeetingData) {
 	case types.ZOOM_MEETING_END:
 		update.MeetingDuration = calcMeetingDuration(data.StartTime, data.EndTime)
 		update.TotalParticipants = o.allMeetings.EndMeeting(meetingID)
+	default:
+		log.Println("Unimplemented event type received:", data.EventType)
+		return
 	}
 
 	o.allMeetings.UpdateMeeting(meetingID, data.MeetingName)

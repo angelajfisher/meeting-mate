@@ -36,7 +36,7 @@ func HandleUpdate(s *discordgo.Session, i *discordgo.InteractionCreate, o orches
 			},
 		})
 		if err != nil {
-			log.Printf("could not respond to interaction: %s", err)
+			log.Printf("HandleUpdate-Invalid: could not respond to interaction: %s", err)
 		}
 		return
 	}
@@ -67,6 +67,6 @@ func HandleUpdate(s *discordgo.Session, i *discordgo.InteractionCreate, o orches
 		},
 	})
 	if err != nil {
-		log.Printf("could not respond to interaction: %s", err)
+		log.Printf("HandleUpdate-Success: could not respond to interaction: %s", err)
 	}
 }

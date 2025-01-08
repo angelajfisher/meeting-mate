@@ -43,6 +43,8 @@ func Run(bc *Config) error {
 			interactions.HandleStatus(s, i, bc.Orchestrator)
 		case interactions.UPDATE_COMMAND:
 			interactions.HandleUpdate(s, i, bc.Orchestrator, interactions.ParseOptions(data.Options))
+		default:
+			log.Println("Invalid interaction received:", data.Name)
 		}
 	})
 

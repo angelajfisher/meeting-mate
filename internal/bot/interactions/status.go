@@ -53,6 +53,6 @@ func HandleStatus(s *discordgo.Session, i *discordgo.InteractionCreate, o orches
 		},
 	})
 	if err != nil {
-		log.Printf("could not respond to interaction: %s", err)
+		log.Printf("HandleStatus: could not respond to interaction: %s", err)
 	}
 }
