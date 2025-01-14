@@ -50,8 +50,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Invoke webhook
-        uses: johannes-huther/webhook.sh@v1
-        env:
+        uses: distributhor/workflow-webhook@v3
+        with:
           webhook_url: ${{ secrets.BOT_WEBHOOK_URL }}
           webhook_secret: ${{ secrets.WEBHOOK_SECRET }}
           data: '{"artifact-id": "${{ needs.compile-binary-and-release.outputs.artifact-id }}"}'
