@@ -72,8 +72,11 @@ func (o Orchestrator) UpdateMeeting(meetingID string, data types.MeetingData) {
 
 	o.allMeetings.UpdateMeeting(meetingID, data.MeetingName)
 
-	for _, dataChannel := range o.dataListeners.GetMeetingListeners(meetingID) {
-		dataChannel <- update
+	// Unless this is a silent update, push this new data to Discord
+	if !data.Silent {
+		for _, dataChannel := range o.dataListeners.GetMeetingListeners(meetingID) {
+			dataChannel <- update
+		}
 	}
 }
 

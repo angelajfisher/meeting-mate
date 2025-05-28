@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
@@ -9,6 +10,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/angelajfisher/meeting-mate/internal/types"
 )
@@ -90,7 +92,7 @@ func (s Config) handleWebhooks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println("Webhook received: Updating applicable watched meetings")
+	log.Println("Received webhook from " + r.Host + ": updating applicable watched meetings")
 
 	var payloadData Meeting
 	err = json.Unmarshal(payload, &ObjectWrapper{&payloadData})
@@ -102,24 +104,53 @@ func (s Config) handleWebhooks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updateData := types.MeetingData{EventType: zoomData.Event, MeetingName: payloadData.Topic}
+	// Will determine how we handle this data: do we forward it to the sister server, or were we sent this to sync up?
+	synchronizing := r.Host == s.SisterAddress
 
-	if zoomData.Event == types.ZOOM_PARTICIPANT_JOIN || zoomData.Event == types.ZOOM_PARTICIPANT_LEAVE {
-		updateData.ParticipantName = payloadData.Participant.UserName
-		updateData.ParticipantID = payloadData.Participant.UserID
-	} else if zoomData.Event == types.ZOOM_MEETING_END {
-		updateData.StartTime = payloadData.StartTime
-		updateData.EndTime = payloadData.EndTime
+	updatedMeetingData := types.MeetingData{
+		EventType:   zoomData.Event,
+		MeetingName: payloadData.Topic,
+		Silent:      synchronizing,
 	}
 
-	s.Orchestrator.UpdateMeeting(payloadData.ID, updateData)
+	if zoomData.Event == types.ZOOM_PARTICIPANT_JOIN || zoomData.Event == types.ZOOM_PARTICIPANT_LEAVE {
+		updatedMeetingData.ParticipantName = payloadData.Participant.UserName
+		updatedMeetingData.ParticipantID = payloadData.Participant.UserID
+	} else if zoomData.Event == types.ZOOM_MEETING_END {
+		updatedMeetingData.StartTime = payloadData.StartTime
+		updatedMeetingData.EndTime = payloadData.EndTime
+	}
+
+	s.Orchestrator.UpdateMeeting(payloadData.ID, updatedMeetingData)
+
+	// Quietly forward this data to our sister server if applicable
+	if !synchronizing && s.SisterAddress != "" {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+
+		var req *http.Request
+		req, err = http.NewRequestWithContext(ctx, http.MethodPost, s.SisterAddress+WEBHOOK_SLUG, r.Body)
+		if err != nil {
+			fmt.Println("could not forward update:", err)
+			return
+		}
+
+		req.Header.Add("content-type", "application/json")
+		resp, reqErr := http.DefaultClient.Do(req)
+		resp.Body.Close()
+		if reqErr != nil {
+			fmt.Println("Could not forward update data to sister server:", reqErr)
+		} else {
+			fmt.Println("Successfully forwarded update data to sister server")
+		}
+	}
 }
 
 func validateEndpoint(payload json.RawMessage, secret string) ([]byte, error) {
 	var payloadData URLValidation
 	err := json.Unmarshal(payload, &payloadData)
 	if err != nil {
-		return []byte{}, fmt.Errorf("could not validate zoom endpoint: %w", err)
+		return []byte{}, fmt.Errorf("could not validate Zoom endpoint: %w", err)
 	}
 
 	hasher := hmac.New(sha256.New, []byte(secret))
@@ -130,7 +161,7 @@ func validateEndpoint(payload json.RawMessage, secret string) ([]byte, error) {
 	var body []byte
 	body, err = json.Marshal(payloadData)
 	if err != nil {
-		return []byte{}, fmt.Errorf("could not validate zoom endpoint: %w", err)
+		return []byte{}, fmt.Errorf("could not validate Zoom endpoint: %w", err)
 	}
 
 	return body, nil

@@ -7,6 +7,11 @@ type MeetingData struct {
 	ParticipantID   string
 	StartTime       string
 	EndTime         string
+
+	// When an update is Silent, the incoming data will not trigger a Discord update.
+	// This is used to keep HA servers' in-memory views of a meeting in sync without
+	// duplicating update notifications to the end user.
+	Silent bool
 }
 
 type UpdateData struct {

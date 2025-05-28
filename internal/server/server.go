@@ -13,21 +13,24 @@ import (
 )
 
 type Config struct {
-	DevMode      bool
-	Orchestrator orchestrator.Orchestrator
-	Port         string
-	BaseURL      string
-	StaticDir    string
-	Secret       string
-	server       *http.Server
+	DevMode       bool
+	Orchestrator  orchestrator.Orchestrator
+	Port          string
+	BaseURL       string
+	StaticDir     string
+	Secret        string
+	SisterAddress string
+	server        *http.Server
 }
+
+const WEBHOOK_SLUG = "/webhooks/"
 
 func Start(ss *Config) error {
 	router := http.NewServeMux()
 	fs := http.FileServer(http.Dir(ss.StaticDir))
 
 	router.Handle("GET "+ss.BaseURL+"/static/", http.StripPrefix(ss.BaseURL+"/static/", fs))
-	router.HandleFunc("POST "+ss.BaseURL+"/webhooks/", ss.handleWebhooks)
+	router.HandleFunc("POST "+ss.BaseURL+WEBHOOK_SLUG, ss.handleWebhooks)
 	router.HandleFunc("GET "+ss.BaseURL+"/docs", ss.handleDocs)
 	router.HandleFunc("GET "+ss.BaseURL+"/", ss.handleIndex)
 

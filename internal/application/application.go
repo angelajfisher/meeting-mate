@@ -96,6 +96,11 @@ func validateEnv(dev bool) (*bot.Config, *server.Config, error) {
 		"./.meetingmate-db.sqlite3",
 		"preferred location of the database file",
 	)
+	sisterAddress := flag.String(
+		"haURL",
+		"",
+		"URL of the other server in the high-availability pair",
+	)
 	flag.Parse()
 
 	fmt.Println(separator + "Starting setup...\n\nLoading environment variables")
@@ -139,6 +144,10 @@ func validateEnv(dev bool) (*bot.Config, *server.Config, error) {
 		}
 	}
 
+	if *sisterAddress == "" {
+		fmt.Println("\nNo secondary address provided for high-availability — synchronization disabled")
+	}
+
 	o := orchestrator.NewOrchestrator(dbPool)
 	botConf := bot.Config{
 		BotToken:     os.Getenv("BOT_TOKEN"),
@@ -146,12 +155,13 @@ func validateEnv(dev bool) (*bot.Config, *server.Config, error) {
 		Orchestrator: o,
 	}
 	serverConf := server.Config{
-		DevMode:      *devMode,
-		Orchestrator: o,
-		BaseURL:      "/projects/meeting-mate",
-		StaticDir:    *staticDir,
-		Port:         *webhookPort,
-		Secret:       os.Getenv("ZOOM_TOKEN"),
+		DevMode:       *devMode,
+		Orchestrator:  o,
+		BaseURL:       "/projects/meeting-mate",
+		StaticDir:     *staticDir,
+		Port:          *webhookPort,
+		Secret:        os.Getenv("ZOOM_TOKEN"),
+		SisterAddress: *sisterAddress,
 	}
 
 	if botConf.BotToken == "" || botConf.AppID == "" || serverConf.Secret == "" {
