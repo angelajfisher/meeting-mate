@@ -9,6 +9,7 @@ import (
 )
 
 type Orchestrator struct {
+	SisterAddress  string // Address of the other half of the HA pair
 	Database       db.DatabasePool
 	meetingWatches *types.Bimap // Bidirectional map tracking ongoing watches categorized by meetingID and by guildID
 	dataListeners  *types.DataListeners
@@ -16,12 +17,13 @@ type Orchestrator struct {
 }
 
 // Creates a new orchestrator to manage data across the program.
-func NewOrchestrator(dbPool db.DatabasePool) Orchestrator {
+func NewOrchestrator(sisterAddress string, dbPool db.DatabasePool) Orchestrator {
 	return Orchestrator{
 		meetingWatches: types.NewBimap(),
 		dataListeners:  types.NewDataListeners(),
 		allMeetings:    types.NewMeetingStore(),
 		Database:       dbPool,
+		SisterAddress:  sisterAddress,
 	}
 }
 

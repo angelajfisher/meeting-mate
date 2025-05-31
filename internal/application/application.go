@@ -148,20 +148,19 @@ func validateEnv(dev bool) (*bot.Config, *server.Config, error) {
 		fmt.Println("\nNo secondary address provided for high-availability — synchronization disabled")
 	}
 
-	o := orchestrator.NewOrchestrator(dbPool)
+	o := orchestrator.NewOrchestrator(*sisterAddress, dbPool)
 	botConf := bot.Config{
 		BotToken:     os.Getenv("BOT_TOKEN"),
 		AppID:        os.Getenv("APP_ID"),
 		Orchestrator: o,
 	}
 	serverConf := server.Config{
-		DevMode:       *devMode,
-		Orchestrator:  o,
-		BaseURL:       "/projects/meeting-mate",
-		StaticDir:     *staticDir,
-		Port:          *webhookPort,
-		Secret:        os.Getenv("ZOOM_TOKEN"),
-		SisterAddress: *sisterAddress,
+		DevMode:      *devMode,
+		Orchestrator: o,
+		BaseURL:      "/projects/meeting-mate",
+		StaticDir:    *staticDir,
+		Port:         *webhookPort,
+		Secret:       os.Getenv("ZOOM_TOKEN"),
 	}
 
 	if botConf.BotToken == "" || botConf.AppID == "" || serverConf.Secret == "" {

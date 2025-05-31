@@ -105,7 +105,7 @@ func (s Config) handleWebhooks(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Will determine how we handle this data: do we forward it to the sister server, or were we sent this to sync up?
-	synchronizing := r.Host == s.SisterAddress
+	synchronizing := r.Host == s.Orchestrator.SisterAddress
 
 	updatedMeetingData := types.MeetingData{
 		EventType:   zoomData.Event,
@@ -124,12 +124,12 @@ func (s Config) handleWebhooks(w http.ResponseWriter, r *http.Request) {
 	s.Orchestrator.UpdateMeeting(payloadData.ID, updatedMeetingData)
 
 	// Quietly forward this data to our sister server if applicable
-	if !synchronizing && s.SisterAddress != "" {
+	if !synchronizing && s.Orchestrator.SisterAddress != "" {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
 
 		var req *http.Request
-		req, err = http.NewRequestWithContext(ctx, http.MethodPost, s.SisterAddress+WEBHOOK_SLUG, r.Body)
+		req, err = http.NewRequestWithContext(ctx, http.MethodPost, s.Orchestrator.SisterAddress+WEBHOOK_SLUG, r.Body)
 		if err != nil {
 			fmt.Println("could not forward update:", err)
 			return

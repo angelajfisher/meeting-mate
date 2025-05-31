@@ -13,14 +13,13 @@ import (
 )
 
 type Config struct {
-	DevMode       bool
-	Orchestrator  orchestrator.Orchestrator
-	Port          string
-	BaseURL       string
-	StaticDir     string
-	Secret        string
-	SisterAddress string
-	server        *http.Server
+	DevMode      bool
+	Orchestrator orchestrator.Orchestrator
+	Port         string
+	BaseURL      string
+	StaticDir    string
+	Secret       string
+	server       *http.Server
 }
 
 const WEBHOOK_SLUG = "/webhooks/"
