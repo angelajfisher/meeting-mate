@@ -20,6 +20,7 @@ type Config struct {
 	StaticDir    string
 	Secret       string
 	server       *http.Server
+	shuttingDown bool
 }
 
 const WEBHOOK_SLUG = "/webhooks/"
@@ -29,6 +30,7 @@ func Start(ss *Config) error {
 	fs := http.FileServer(http.Dir(ss.StaticDir))
 
 	router.Handle("GET "+ss.BaseURL+"/static/", http.StripPrefix(ss.BaseURL+"/static/", fs))
+	router.HandleFunc("GET "+ss.BaseURL+"/health", ss.handleHealth)
 	router.HandleFunc("POST "+ss.BaseURL+WEBHOOK_SLUG, ss.handleWebhooks)
 	router.HandleFunc("GET "+ss.BaseURL+"/docs", ss.handleDocs)
 	router.HandleFunc("GET "+ss.BaseURL+"/", ss.handleIndex)
@@ -74,6 +76,19 @@ func Stop(ss *Config) error {
 
 	fmt.Print("Done!\n")
 	return nil
+}
+
+// Health checks return 200 when the service is OK and 503 when shutting down
+func (s *Config) handleHealth(w http.ResponseWriter, _ *http.Request) {
+	select {
+	case <-s.Orchestrator.ShutdownNotif:
+		s.shuttingDown = true
+	default:
+	}
+	if s.shuttingDown {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		return
+	}
 }
 
 func (s Config) handleIndex(w http.ResponseWriter, r *http.Request) {

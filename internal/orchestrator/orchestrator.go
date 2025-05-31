@@ -1,7 +1,9 @@
 package orchestrator
 
 import (
+	"context"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/angelajfisher/meeting-mate/internal/db"
@@ -11,7 +13,8 @@ import (
 type Orchestrator struct {
 	SisterAddress  string // Address of the other half of the HA pair
 	Database       db.DatabasePool
-	meetingWatches *types.Bimap // Bidirectional map tracking ongoing watches categorized by meetingID and by guildID
+	ShutdownNotif  chan struct{} // Notifier for the health check endpoint
+	meetingWatches *types.Bimap  // Bidirectional map tracking ongoing watches categorized by meetingID and by guildID
 	dataListeners  *types.DataListeners
 	allMeetings    *types.MeetingStore
 }
@@ -22,6 +25,7 @@ func NewOrchestrator(sisterAddress string, dbPool db.DatabasePool) Orchestrator 
 		meetingWatches: types.NewBimap(),
 		dataListeners:  types.NewDataListeners(),
 		allMeetings:    types.NewMeetingStore(),
+		ShutdownNotif:  make(chan struct{}, 1),
 		Database:       dbPool,
 		SisterAddress:  sisterAddress,
 	}
@@ -100,6 +104,13 @@ func (o Orchestrator) CancelWatch(guildID string, meetingID string) {
 
 // Informs all watch processes of impeding shutdown so they can act accordingly
 func (o Orchestrator) Shutdown() {
+	defer func() { o.ShutdownNotif <- struct{}{} }()
+
+	// Only notify listeners if the other server is unavailable
+	if checkServerHealth(o.SisterAddress) {
+		return
+	}
+
 	for _, watch := range o.dataListeners.GetAllListeners() {
 		watch <- types.UpdateData{EventType: types.SYSTEM_SHUTDOWN}
 	}
@@ -123,4 +134,28 @@ func calcMeetingDuration(start string, end string) string {
 		return endTime.Sub(startTime).String()
 	}
 	return "Unknown"
+}
+
+// Returns true if requested server is healthy
+func checkServerHealth(address string) bool {
+	if address == "" {
+		return false
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, address+"/health", nil)
+	if err != nil {
+		return false
+	}
+
+	req.Header.Add("content-type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return false
+	}
+	resp.Body.Close()
+
+	return resp.StatusCode == http.StatusOK
 }
