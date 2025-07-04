@@ -16,5 +16,5 @@ repos:
   - repo: https://github.com/TekWizely/pre-commit-golang
     rev: v1.0.0-rc.1
     hooks:
-      - id: golangci-lint-repo-mod
+      - id: golangci-lint-repo-pkg
         args: [--fix]
