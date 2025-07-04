@@ -8,6 +8,7 @@ import (
 
 	"github.com/angelajfisher/meeting-mate/internal/bot/interactions"
 	"github.com/angelajfisher/meeting-mate/internal/orchestrator"
+	"github.com/angelajfisher/meeting-mate/internal/types"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -16,6 +17,7 @@ type Config struct {
 	AppID        string
 	Orchestrator orchestrator.Orchestrator
 	session      *discordgo.Session
+	userID       string
 }
 
 func Run(bc *Config) error {
@@ -50,6 +52,7 @@ func Run(bc *Config) error {
 
 	bc.session.AddHandler(func(_ *discordgo.Session, r *discordgo.Ready) {
 		log.Println("Logged in as", r.User.String())
+		bc.userID = r.User.ID
 	})
 
 	_, err = bc.session.ApplicationCommandBulkOverwrite(bc.AppID, "", interactions.InteractionList())
@@ -76,17 +79,22 @@ func Run(bc *Config) error {
 
 	// Keep track of the watches happening in each channel so a restart announcement can be sent
 	channelWatches := make(map[string][]string) // channelID: []meetingIDs
+	keepingHistory := make(map[string]bool)     // channelID: FULL_HISTORY?
 
 	// Start the watch process for each watch loaded from the database
 	for _, watch := range loadedWatches {
 		go interactions.LoadSavedWatch(bc.session, bc.Orchestrator, watch)
 		channelWatches[watch.ChannelID] = append(channelWatches[watch.ChannelID], watch.MeetingID)
+		if watch.Options.HistoryLevel == types.FULL_HISTORY {
+			// If even one watch in a channel is keeping full history, we don't want to delete the previous bot message
+			keepingHistory[watch.ChannelID] = true
+		}
 	}
 	log.Println("Loaded", len(loadedWatches), "watches from database")
 
 	// Notify every channel of the restarted watches
 	for channelID, meetingIDs := range channelWatches {
-		notifyOfRestart(bc.session, meetingIDs, channelID)
+		notifyOfRestart(bc.session, meetingIDs, channelID, bc.userID, keepingHistory[channelID])
 	}
 
 	return nil
@@ -115,7 +123,7 @@ func Stop(bc *Config) error {
 }
 
 // Sends a message to the given channel notifying of the program's (& their watches') restart
-func notifyOfRestart(s *discordgo.Session, meetingIDs []string, channelID string) {
+func notifyOfRestart(s *discordgo.Session, meetingIDs []string, channelID string, userID string, keepingHistory bool) {
 	if len(meetingIDs) == 0 {
 		return
 	}
@@ -131,6 +139,25 @@ func notifyOfRestart(s *discordgo.Session, meetingIDs []string, channelID string
 		meetingList.WriteString("This channel's watches on the following meeting IDs have been automatically resumed:")
 		for _, meetingID := range meetingIDs {
 			meetingList.WriteString("\n- `" + meetingID + "`")
+		}
+	}
+
+	// Remove the previous bot message if the user isn't keeping history
+	if !keepingHistory {
+		channel, err := s.Channel(channelID)
+		if err != nil {
+			log.Printf("could not locate provided channel: %s", err)
+		}
+		lastMessage, err := s.ChannelMessage(channelID, channel.LastMessageID)
+		if err != nil {
+			log.Printf("could not grab previous channel message: %s", err)
+		}
+
+		if lastMessage.Author.ID == userID {
+			err = s.ChannelMessageDelete(channelID, lastMessage.ID)
+			if err != nil {
+				log.Printf("could not delete previous meeting message: %s", err)
+			}
 		}
 	}
 
