@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	appVersion    = "1.3"
+	appVersion    = "1.4"
 	fatalErrorMsg = "\nfatal: %v\n\nA fatal error occurred. Meeting Mate shut down.\n"
 	separator     = "\n——————————————————————————————————————\n\n"
 )
@@ -108,9 +108,9 @@ func validateEnv(dev bool) (*bot.Config, *server.Config, error) {
 
 	if *envPath != "" {
 		fmt.Println(
-			"Loading variables from '",
+			"Loading variables from",
 			*envPath,
-			"' — note that these will not override any existing environment variables",
+			"— note that these will not override any existing environment variables",
 		)
 		err := godotenv.Load(*envPath)
 		if err != nil {
@@ -165,7 +165,7 @@ func validateEnv(dev bool) (*bot.Config, *server.Config, error) {
 
 	if botConf.BotToken == "" || botConf.AppID == "" || serverConf.Secret == "" {
 		return nil, nil, errors.New(
-			"required ZOOM_TOKEN, BOT_TOKEN, and/or APP_ID variables missing from environment",
+			"required variables ZOOM_TOKEN, BOT_TOKEN, and/or APP_ID missing from environment",
 		)
 	}
 

@@ -3,7 +3,7 @@
 
 Connect your Discord server with your Zoom meetings!
 
-![Running Go 1.22](https://img.shields.io/badge/Go-1.22-007d9c.svg?style=flat-square) [![Zoom API Events v1.0.0](https://img.shields.io/badge/Zoom%20API%20Events-v1.0.0-0B5CFF.svg?style=flat-square)](https://developers.zoom.us/docs/api/meetings/events) [![Discord API v9](https://img.shields.io/badge/Discord%20API-v9-5865F2.svg?style=flat-square)](https://discord.com/developers/docs/reference#api-versioning) ![Current release: v1.3](https://img.shields.io/badge/Release-v1.3-green.svg?style=flat-square) [![License](https://img.shields.io/badge/License-Apache_2.0-f69923.svg?style=flat-square)](https://opensource.org/licenses/Apache-2.0)
+![Running Go 1.24](https://img.shields.io/badge/Go-1.24-007d9c.svg?style=flat-square) [![Zoom Webhooks v1](https://img.shields.io/badge/Zoom%20Webhooks-v1-0B5CFF.svg?style=flat-square)](https://developers.zoom.us/docs/api/meetings/events) [![Discord API v9](https://img.shields.io/badge/Discord%20API-v9-5865F2.svg?style=flat-square)](https://discord.com/developers/docs/reference#api-versioning) ![Current release: v1.4](https://img.shields.io/badge/Release-v1.4-green.svg?style=flat-square) [![License](https://img.shields.io/badge/License-Apache_2.0-f69923.svg?style=flat-square)](https://opensource.org/licenses/Apache-2.0)
 
 </div>
 
